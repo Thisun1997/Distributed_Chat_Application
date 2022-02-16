@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>team.Impala</groupId>
-    <artifactId>Distributed_Chat_System</artifactId>
+    <artifactId>Distributed_Chat_Application</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
