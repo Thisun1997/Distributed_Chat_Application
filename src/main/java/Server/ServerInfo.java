@@ -3,10 +3,10 @@ package Server;
 public class ServerInfo {
     private String serverID;
     private String address;
-    private int serverPort;
-    private int clientPort;
+    private Integer serverPort;
+    private Integer clientPort;
 
-    public ServerInfo(String serverID, String address, int serverPort, int clientPort) {
+    public ServerInfo(String serverID, String address, Integer serverPort, Integer clientPort) {
         this.serverID = serverID;
         this.address = address;
         this.serverPort = serverPort;
@@ -29,19 +29,19 @@ public class ServerInfo {
         this.address = address;
     }
 
-    public int getServerPort() {
+    public Integer getServerPort() {
         return serverPort;
     }
 
-    public void setServerPort(int serverPort) {
+    public void setServerPort(Integer serverPort) {
         this.serverPort = serverPort;
     }
 
-    public int getClientPort() {
+    public Integer getClientPort() {
         return clientPort;
     }
 
-    public void setClientPort(int clientPort) {
+    public void setClientPort(Integer clientPort) {
         this.clientPort = clientPort;
     }
 }

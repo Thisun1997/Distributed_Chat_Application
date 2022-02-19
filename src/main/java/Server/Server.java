@@ -9,8 +9,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class Server {
     private String serverID;
     private String address;
-    private int serverPort;
-    private int clientPort;
+    private Integer serverPort;
+    private Integer clientPort;
     private ServerInfo selfServerInfo;
     private final ConcurrentHashMap<Long, ClientThread> clientThreadList = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Room> roomList = new ConcurrentHashMap<>();
@@ -43,11 +43,11 @@ public class Server {
         return address;
     }
 
-    public int getClientPort() {
+    public Integer getClientPort() {
         return clientPort;
     }
 
-    public int getServerPort() {
+    public Integer getServerPort() {
         return serverPort;
     }
 
@@ -81,7 +81,7 @@ public class Server {
         roomList.put(getMainHallID(serverID), mainHall);
     }
 
-    public void addServer(String selfID, String serverID, String address, int serverPort, int clientPort){
+    public void addServer(String selfID, String serverID, String address, Integer serverPort, Integer clientPort){
         ServerInfo serverInfo = new ServerInfo(serverID, address, serverPort, clientPort);
         if(Objects.equals(selfID, serverID)){
             startServer(serverInfo);
@@ -111,7 +111,7 @@ public class Server {
     }
 
     public synchronized ServerInfo getHighestPriorityCandidate() {
-        int max = 0;
+        Integer max = 0;
         for (String key: tempCandidateServers.keySet()){
             if(Integer.parseInt(key) > max){
                 max = Integer.parseInt(key);

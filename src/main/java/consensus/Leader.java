@@ -18,4 +18,11 @@ public class Leader {
         return leaderInstance;
     }
 
+    public String getLeaderID() {
+        return leaderID;
+    }
+
+    public void setLeaderID(String leaderID) {
+        this.leaderID = leaderID;
+    }
 }

@@ -1,6 +1,7 @@
 package Server;
 
 import Client.ClientThread;
+import consensus.Leader;
 import consensus.election.FastBullyAlgorithm;
 
 import java.io.File;
@@ -80,7 +81,7 @@ public class Main {
             ServerThread serverThread = new ServerThread( serverCoordinationSocket );
             // starting the thread
             Thread Server_t = new Thread(serverThread);
-            Thread.sleep(7000);
+            Thread.sleep(10000);
             Server_t.start();
 
 
@@ -94,6 +95,7 @@ public class Main {
             // T4
             Server.getInstance().setElectionNominationTimeout(30L);
             initiateCoordinator();
+
 
 //            Runnable heartbeat = new BullyAlgorithm("Heartbeat");
 //            new Thread(heartbeat).start();
@@ -144,7 +146,8 @@ public class Main {
         }
         else{
             FastBullyAlgorithm IamUp_FBA = new FastBullyAlgorithm("IamUp");
-            new Thread(IamUp_FBA).start();
+//            new Thread(IamUp_FBA).start();
+            IamUp_FBA.sendIamUpMessage();
         }
     }
 

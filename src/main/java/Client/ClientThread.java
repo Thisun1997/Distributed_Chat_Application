@@ -1,5 +1,6 @@
 package Client;
 
+import consensus.Leader;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -34,6 +35,7 @@ public class ClientThread implements Runnable{
         JSONObject msgClient = newIdentityReply(approve);
 //        JSONObject msgBroadcast = roomChangeReply(identity,"", );
         System.out.println("identity");
+        System.out.println(Leader.getInstance().getLeaderID());
     }
 
     private void list() {

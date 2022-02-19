@@ -5,30 +5,36 @@ import Model.Constant;
 import Server.Server;
 import Server.ServerInfo;
 import Server.ServerMessage;
+import Services.Quartz;
 import consensus.Leader;
-import org.quartz.impl.StdSchedulerFactory;
 import consensus.election.timeout.*;
 import org.json.simple.JSONObject;
 import org.quartz.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class FastBullyAlgorithm implements Runnable{
 
     String option;
+    JobExecutionContext jobExecutionContext = null;
+    static JSONObject jsonMessage = null;
     static ServerInfo initiatingServer;
     static ServerInfo iAmUpSender;
+    static ServerInfo leader;
     protected Scheduler scheduler;
 
     public FastBullyAlgorithm(String option){
         this.option = option;
-        try {
-            this.scheduler = new StdSchedulerFactory().getScheduler();
-        } catch (SchedulerException e) {
-            e.printStackTrace();
-        }
+        this.scheduler =  Quartz.getInstance().getScheduler();
+    }
+
+    public FastBullyAlgorithm(String option, JobExecutionContext jobExecutionContext){
+        this.option = option;
+        this.scheduler =  Quartz.getInstance().getScheduler();
+        this.jobExecutionContext = jobExecutionContext;
     }
 
 
@@ -84,17 +90,30 @@ public class FastBullyAlgorithm implements Runnable{
         startWaitingTimer("group_fast_bully", timeout, coordinatorMsgTimeoutJob);
     }
 
-    public void sendNominationMessage(){
+    public void sendNominationMessage(String stroption){
         ServerInfo highestPriorityCandidate = Server.getInstance().getHighestPriorityCandidate();
-        try {
-            MessagePassing.sendServer(ServerMessage.nominationMessage(), highestPriorityCandidate);
-            System.out.println("Sending nomination to : " + highestPriorityCandidate.getServerID());
-            startWaitingForCoordinatorMessage(Server.getInstance().getElectionCoordinatorTimeout());
-        } catch (IOException e) {
-            e.printStackTrace();
+        if(Objects.equals(stroption, "sendNominationAnswerTimeout")){
+            try {
+                MessagePassing.sendServer(ServerMessage.nominationMessage(), highestPriorityCandidate);
+                System.out.println("Sending nomination to : " + highestPriorityCandidate.getServerID());
+                startWaitingForCoordinatorMessage(Server.getInstance().getElectionCoordinatorTimeout());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            Server.getInstance().setAnswerMessageReceived(false);
+        }
+        else if (Objects.equals(stroption, "sendNominationCoordinatorTimeout")){
+            try {
+                MessagePassing.sendServer(ServerMessage.nominationMessage(), highestPriorityCandidate);
+                System.out.println("Sending nomination to : " + highestPriorityCandidate.getServerID());
+                resetWaitingForCoordinatorMessageTimer(this.jobExecutionContext, this.jobExecutionContext.getTrigger().getKey(),
+                        Server.getInstance().getElectionCoordinatorTimeout());
+                this.jobExecutionContext = null;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
-        Server.getInstance().setAnswerMessageReceived(false);
     }
 
     public void startWaitingForCoordinatorMessage(Long timeout) {
@@ -104,23 +123,69 @@ public class FastBullyAlgorithm implements Runnable{
         startWaitingTimer("group_fast_bully", timeout, coordinatorMsgTimeoutJob);
     }
 
-    private void sendCoordinatorMessage() {
-        ServerInfo coordinatorServerInfo = Server.getInstance().getSelfServerInfo();
+    private synchronized void sendCoordinatorMessage(String stroption) {
+        String leaderServerID = jsonMessage.get("serverID").toString();
+        String leaderAddress = jsonMessage.get("address").toString();
+        Integer leaderServerPort = Integer.parseInt( jsonMessage.get("serverPort").toString());
+        Integer leaderClientPort = Integer.parseInt( jsonMessage.get("clientPort").toString());
+        leader = new ServerInfo(leaderServerID, leaderAddress, leaderServerPort, leaderClientPort);
+
+        ServerInfo SelfServerInfo = Server.getInstance().getSelfServerInfo();
         ConcurrentHashMap<String, ServerInfo> lowPriorityServers = Server.getInstance().getLowPriorityServers();
         ArrayList<ServerInfo> lowPriorityServerList = new ArrayList<>();
         for (String serverID : lowPriorityServers.keySet()) {
             lowPriorityServerList.add(lowPriorityServers.get(serverID));
         }
-
-        try {
-            MessagePassing.sendServerBroadcast(ServerMessage.setCoordinatorMessage(coordinatorServerInfo.getServerID(), coordinatorServerInfo.getAddress(), coordinatorServerInfo.getServerPort(), coordinatorServerInfo.getClientPort()),lowPriorityServerList);
-            System.out.println("coordinator message sent");
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (Objects.equals(stroption, "coordinator")){
+            Server.getInstance().setViewMessageReceived(true);
+            Server.getInstance().addTempCandidateServer(leader);
+            String selfServerID = SelfServerInfo.getServerID();
+            leaderServerID = leader.getServerID();
+            Integer leadercheck = 0;
+            if(Leader.getInstance().getLeaderID() != null){
+                leadercheck = Integer.parseInt(Leader.getInstance().getLeaderID());
+            }
+            if (Integer.parseInt(selfServerID) >= Integer.parseInt(leaderServerID) && Integer.parseInt(selfServerID) >=leadercheck){
+                try {
+                    MessagePassing.sendServerBroadcast(ServerMessage.setCoordinatorMessage(SelfServerInfo.getServerID(), SelfServerInfo.getAddress(), SelfServerInfo.getServerPort(), SelfServerInfo.getClientPort()),lowPriorityServerList);
+                    System.out.println("coordinator message sent"+option);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                acceptNewCoordinator(SelfServerInfo.getServerID());
+            }
+            else if (Integer.parseInt(selfServerID) < Integer.parseInt(leaderServerID)){
+                acceptNewCoordinator(leaderServerID);
+            }
+            stopWaitingForViewMessage();
         }
+        else if (Objects.equals(stroption, "coordinatorAnswerTimeout") || Objects.equals(stroption, "coordinatorViewTimeout")){
+            try {
+                MessagePassing.sendServerBroadcast(ServerMessage.setCoordinatorMessage(SelfServerInfo.getServerID(), SelfServerInfo.getAddress(), SelfServerInfo.getServerPort(), SelfServerInfo.getClientPort()),lowPriorityServerList);
+                System.out.println("coordinator message sent"+stroption);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            acceptNewCoordinator(SelfServerInfo.getServerID());
+            if (Objects.equals(stroption, "coordinatorAnswerTimeout")){
+                stopElection();
+            }
+            else{
+                Server.getInstance().setViewMessageReceived(false);
+            }
+        }
+    }
 
-        //fastBullyElectionManagementService.acceptNewCoordinator(serverState.getServerInfo());
-        stopElection();
+    public synchronized void acceptNewCoordinator(String serverID) {
+//        if(Leader.getInstance().getLeaderID() != null){
+//            if(Integer.parseInt(Leader.getInstance().getLeaderID()) < Integer.parseInt(serverID)){
+                Leader.getInstance().setLeaderID(serverID);
+                Server.getInstance().setOngoingElection(false);
+                Server.getInstance().setViewMessageReceived(false);
+                Server.getInstance().setAnswerMessageReceived(false);
+                System.out.println("accepting new coordinator "+serverID);
+//            }
+//        }
     }
 
     private void restartElection() {
@@ -246,16 +311,73 @@ public class FastBullyAlgorithm implements Runnable{
 
     }
 
-//    public void sendViewMessage(ServerInfo sender, ServerInfo coordinator) {
-//        if (null == coordinator) {
-//            // in the beginning coordinator could be null
-//            coordinator = sender;
-//        }
-//        String viewMessage = jsonMessageBuilder.viewMessage(coordinator.getServerId(), coordinator.getAddress(),
-//                coordinator.getPort(), coordinator.getManagementPort());
-//        peerClient.commPeerOneWay(sender, viewMessage);
-//    }
+    private synchronized void sendViewMessage() {
+        String senderServerID = jsonMessage.get("serverID").toString();
+        String senderAddress = jsonMessage.get("address").toString();
+        Integer senderServerPort = Integer.parseInt( jsonMessage.get("serverPort").toString());
+        Integer senderClientPort = Integer.parseInt( jsonMessage.get("clientPort").toString());
+        iAmUpSender = new ServerInfo(senderServerID, senderAddress, senderServerPort, senderClientPort);
 
+        Server.getInstance().addTempCandidateServer(iAmUpSender);
+        if(Leader.getInstance().getLeaderID() == null){
+            try {
+                MessagePassing.sendServer(ServerMessage.viewMessage(senderServerID, senderAddress, senderServerPort, senderClientPort), iAmUpSender);
+                System.out.println("View message sent to "+senderServerID+" with leader as "+senderServerID);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        else{
+            try {
+                if (Objects.equals(Server.getInstance().getSelfServerInfo().getServerID(), Leader.getInstance().getLeaderID())){
+                    leader = Server.getInstance().getSelfServerInfo();
+                }
+                else {
+                    leader = Server.getInstance().getOtherServers().get(Leader.getInstance().getLeaderID());
+                }
+                MessagePassing.sendServer(ServerMessage.viewMessage(leader.getServerID(), leader.getAddress(), leader.getServerPort(), leader.getClientPort()), iAmUpSender);
+                System.out.println("View message sent to "+senderServerID+" with leader as "+leader.getServerID());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void resetWaitingForCoordinatorMessageTimer(JobExecutionContext context, TriggerKey triggerKey, Long timeout) {
+        try {
+            JobDetail jobDetail = context.getJobDetail();
+            if (scheduler.checkExists(jobDetail.getKey())) {
+
+                System.out.println(String.format("Job get trigger again [%s]", jobDetail.getKey().getName()));
+                scheduler.triggerJob(jobDetail.getKey());
+
+            } else {
+
+                Trigger simpleTrigger = TriggerBuilder.newTrigger()
+                        .withIdentity("election_trigger", "group_fast_bully")
+                        .startAt(DateBuilder.futureDate(Math.toIntExact(timeout), DateBuilder.IntervalUnit.SECOND))
+                        .build();
+                context.getScheduler().rescheduleJob(triggerKey, simpleTrigger);
+            }
+
+        } catch (ObjectAlreadyExistsException oe) {
+            System.out.println(oe.getLocalizedMessage());
+
+            try {
+
+                JobDetail jobDetail = context.getJobDetail();
+                System.out.println(String.format("Job get trigger again [%s]", jobDetail.getKey().getName()));
+
+                scheduler.triggerJob(jobDetail.getKey());
+
+            } catch (SchedulerException e) {
+                e.printStackTrace();
+            }
+
+        } catch (SchedulerException e) {
+            e.printStackTrace();
+        }
+    }
 
     @Override
     public void run() {
@@ -266,16 +388,19 @@ public class FastBullyAlgorithm implements Runnable{
             case "election":
                 replyAnswerForElectionMessage();
                 break;
-            case "nomination":
-                sendNominationMessage();
+            case "sendNominationAnswerTimeout":
+            case "sendNominationCoordinatorTimeout":
+                sendNominationMessage(option);
                 break;
             case "coordinator":
-                sendCoordinatorMessage();
+            case "coordinatorAnswerTimeout":
+            case "coordinatorViewTimeout":
+                sendCoordinatorMessage(option);
                 break;
             case "IamUp":
                 sendIamUpMessage();
                 break;
-            case "view":
+            case "sendView":
                 sendViewMessage();
                 break;
             case "restart_election":
@@ -285,37 +410,56 @@ public class FastBullyAlgorithm implements Runnable{
 
     }
 
-    private void sendViewMessage() {
-    }
-
     public static void receiveMessage(JSONObject jsonObject) {
         String msgOption = jsonObject.get("option").toString();
+        jsonMessage = jsonObject;
         switch(msgOption){
             case "election":
                 String initiatingServerID = jsonObject.get("serverID").toString();
                 System.out.println("election message from "+ initiatingServerID+" received.");
                 FastBullyAlgorithm electionFBA = new FastBullyAlgorithm("election");
                 new Thread(electionFBA).start();
+                break;
             case "answer":
                 String answerServerID = jsonObject.get("serverID").toString();
                 Server.getInstance().setAnswerMessageReceived(true);
                 ServerInfo answerServerInfo = Server.getInstance().getCandidateServers().get(answerServerID);
                 Server.getInstance().addTempCandidateServer(answerServerInfo);
                 System.out.println("answer message from "+ answerServerID+" received.");
+                break;
             case "nomination":
-                FastBullyAlgorithm nominationFBA = new FastBullyAlgorithm("nomination");
+                FastBullyAlgorithm nominationFBA = new FastBullyAlgorithm("coordinatorFromTimeout");
                 new Thread(nominationFBA).start();
+                break;
             case "IamUp":
-                synchronized (Leader.getInstance()){
-                    String senderServerID = jsonObject.get("serverID").toString();
-                    String senderAddress = jsonObject.get("address").toString();
-                    int senderServerPort = (int) jsonObject.get("serverPort");
-                    int senderClientPort = (int) jsonObject.get("clientPort");
-                    iAmUpSender = new ServerInfo(senderServerID, senderAddress, senderServerPort, senderClientPort);
-                    FastBullyAlgorithm iAmUpFBA = new FastBullyAlgorithm("nomination");
-                    iAmUpFBA.sendViewMessage();
+                FastBullyAlgorithm sendViewFBA = new FastBullyAlgorithm("sendView");
+//                new Thread(sendViewFBA).start();
+                sendViewFBA.sendViewMessage();
+                break;
+            case "view":
+                FastBullyAlgorithm coordinatorFBA = new FastBullyAlgorithm("coordinator");
+//                new Thread(coordinatorFBA).start();
+                coordinatorFBA.sendCoordinatorMessage(coordinatorFBA.option);
+                break;
+            case "coordinator":
+                FastBullyAlgorithm stopFBA = new FastBullyAlgorithm("stop");
+                stopFBA.stopElection();
+                Server.getInstance().setViewMessageReceived(true);
+                String leaderServerID = jsonObject.get("serverID").toString();
+                Integer leadercheck = 0;
+                if(Leader.getInstance().getLeaderID() != null){
+                    leadercheck = Integer.parseInt(Leader.getInstance().getLeaderID());
                 }
-
+                if(Integer.parseInt(leaderServerID) > leadercheck){
+                    String leaderAddress = jsonObject.get("address").toString();
+                    Integer leaderServerPort = Integer.parseInt( jsonObject.get("serverPort").toString());
+                    Integer leaderClientPort = Integer.parseInt( jsonObject.get("clientPort").toString());
+                    leader = new ServerInfo(leaderServerID, leaderAddress, leaderServerPort, leaderClientPort);
+                    synchronized (Leader.getInstance()){
+                        stopFBA.acceptNewCoordinator(leaderServerID);
+                    }
+                }
+                break;
         }
     }
 
