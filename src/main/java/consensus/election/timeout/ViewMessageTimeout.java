@@ -11,10 +11,10 @@ import org.quartz.JobExecutionException;
 public class ViewMessageTimeout extends MessageTimeout {
     @Override
     public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
-        if(!Server.getInstance().getViewMessageReceived() && !interrupted.get()){
+        if(!Server.getInstance().getViewMessageReceived() && !interrupted.get() && Server.getInstance().getOngoingElection()){
             FastBullyAlgorithm stopFBA = new FastBullyAlgorithm("stopViewTimeout");
             stopFBA.stopElection();
-            if(Leader.getInstance() == null){
+            if(Leader.getInstance().getLeaderID() == null){
                 FastBullyAlgorithm coordinatorFBA = new FastBullyAlgorithm("coordinatorViewTimeout");
                 new Thread(coordinatorFBA).start();
             }

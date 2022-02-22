@@ -176,7 +176,7 @@ public class Server {
     }
 
     public void setElectionNominationTimeout(Long electionNominationTimeout) {
-        this.electionNominationTimeout = electionNominationTimeout;
+        this.electionNominationTimeout = electionNominationTimeout*(getOtherServers().size()+1-getLowPriorityServers().size());
     }
 
 }

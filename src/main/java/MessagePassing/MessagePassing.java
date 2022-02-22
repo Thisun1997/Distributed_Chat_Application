@@ -69,15 +69,18 @@ public class MessagePassing
     }
 
     //send broadcast message
-    public static void sendServerBroadcast(JSONObject obj, ArrayList<ServerInfo> serverList) throws IOException {
+    public static void sendServerBroadcast(JSONObject obj, ArrayList<ServerInfo> serverList) {
         for (ServerInfo each : serverList) {
-            Socket socket = new Socket(each.getAddress(), each.getServerPort());
-            DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
-            dataOutputStream.write((obj.toJSONString() + "\n").getBytes( StandardCharsets.UTF_8));
-            dataOutputStream.flush();
+            try {
+                Socket socket = new Socket(each.getAddress(), each.getServerPort());
+                DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
+                dataOutputStream.write((obj.toJSONString() + "\n").getBytes(StandardCharsets.UTF_8));
+                dataOutputStream.flush();
+            } catch (IOException e) {
+                System.out.println("server "+each.getServerID()+" is down..");
+            }
         }
     }
-
     //send message to leader server
 //    public static void sendToLeader(JSONObject obj) throws IOException
 //    {

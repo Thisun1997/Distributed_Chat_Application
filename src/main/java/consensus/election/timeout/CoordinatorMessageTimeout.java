@@ -10,7 +10,7 @@ import org.quartz.JobExecutionException;
 public class CoordinatorMessageTimeout extends MessageTimeout {
     @Override
     public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
-        if(!interrupted.get()){
+        if(!interrupted.get() && Server.getInstance().getOngoingElection()){
             try{
                 ServerInfo highestPriorityCandidate = Server.getInstance().getHighestPriorityCandidate();
                 FastBullyAlgorithm nominationFBA;

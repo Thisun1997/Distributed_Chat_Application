@@ -81,7 +81,7 @@ public class Main {
             ServerThread serverThread = new ServerThread( serverCoordinationSocket );
             // starting the thread
             Thread Server_t = new Thread(serverThread);
-            Thread.sleep(10000);
+//            Thread.sleep(10000);
             Server_t.start();
 
 
@@ -134,9 +134,10 @@ public class Main {
         }
         catch ( IOException e) {
             System.out.println("ERROR : occurred in main " + Arrays.toString(e.getStackTrace()));
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
+//        catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
     }
 
     private static void initiateCoordinator() {
@@ -146,8 +147,11 @@ public class Main {
         }
         else{
             FastBullyAlgorithm IamUp_FBA = new FastBullyAlgorithm("IamUp");
-//            new Thread(IamUp_FBA).start();
-            IamUp_FBA.sendIamUpMessage();
+            new Thread(IamUp_FBA).start();
+//            IamUp_FBA.sendIamUpMessage();
+//            if (Integer.parseInt(Server.getInstance().getSelfServerInfo().getServerID()) == 1){
+//                FastBullyAlgorithm.initialize();
+//            }
         }
     }
 

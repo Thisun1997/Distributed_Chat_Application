@@ -9,16 +9,19 @@ import org.quartz.JobExecutionException;
 public class AnswerMessageTimeout extends MessageTimeout{
     @Override
     public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
-        if (Server.getInstance().getAnswerMessageReceived() || interrupted.get()) {
-            //answer messages were received
-            FastBullyAlgorithm nominationFBA = new FastBullyAlgorithm("sendNominationAnswerTimeout");
-            new Thread(nominationFBA).start();
+        if(Server.getInstance().getOngoingElection()){
+            if (Server.getInstance().getAnswerMessageReceived() || interrupted.get()) {
+                //answer messages were received
+                FastBullyAlgorithm nominationFBA = new FastBullyAlgorithm("sendNominationAnswerTimeout");
+                new Thread(nominationFBA).start();
+//            nominationFBA.sendNominationMessage("sendNominationAnswerTimeout");
 
-        } else {
-            // answer messages were not received
-            // send coordinator message to lower priority servers
-            FastBullyAlgorithm coordinatorFBA = new FastBullyAlgorithm("coordinatorAnswerTimeout");
-            new Thread(coordinatorFBA).start();
+            } else {
+                // answer messages were not received
+                // send coordinator message to lower priority servers
+                FastBullyAlgorithm coordinatorFBA = new FastBullyAlgorithm("coordinatorAnswerTimeout");
+                new Thread(coordinatorFBA).start();
+            }
         }
 
     }
