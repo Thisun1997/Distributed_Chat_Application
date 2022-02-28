@@ -1,6 +1,7 @@
 package MessagePassing;
 
 //import consensus.LeaderState;
+import consensus.Leader;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -82,14 +83,14 @@ public class MessagePassing
         }
     }
     //send message to leader server
-//    public static void sendToLeader(JSONObject obj) throws IOException
-//    {
-//        Server destServer = ServerState.getInstance().getServers()
-//                .get( LeaderState.getInstance().getLeaderID() );
-//        Socket socket = new Socket(destServer.getServerAddress(),
-//                destServer.getCoordinationPort());
-//        DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
-//        dataOutputStream.write((obj.toJSONString() + "\n").getBytes( StandardCharsets.UTF_8));
-//        dataOutputStream.flush();
-//    }
+    public static void sendToLeader(JSONObject obj) throws IOException
+    {
+        ServerInfo destServerInfo = Server.getInstance().getOtherServers()
+                .get( Leader.getInstance().getLeaderID() );
+        Socket socket = new Socket(destServerInfo.getAddress(),
+                destServerInfo.getServerPort());
+        DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
+        dataOutputStream.write((obj.toJSONString() + "\n").getBytes( StandardCharsets.UTF_8));
+        dataOutputStream.flush();
+    }
 }

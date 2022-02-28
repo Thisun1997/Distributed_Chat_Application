@@ -1,6 +1,9 @@
 package Server;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+
+import java.util.List;
 
 public class ServerMessage {
 
@@ -58,4 +61,32 @@ public class ServerMessage {
         return jsonObject;
     }
 
+    public static JSONObject leaderUpdate(String serverID, List<String> clientIDList, List<Room> roomList) {
+        JSONArray clients = new JSONArray();
+        clients.addAll( clientIDList );
+
+        JSONArray chatRooms = new JSONArray();
+        for( Room room : roomList ) {
+            // {"clientid" : "Adel", "roomid" : "jokes", "serverid" : "s1"}
+            JSONObject chatRoom = new JSONObject();
+            chatRoom.put( "clientid", room.getRoomID());
+            chatRoom.put( "roomid", room.getRoomID());
+            chatRoom.put( "serverid", room.getServerID() );
+            chatRooms.add( chatRoom );
+        }
+
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "leaderupdate");
+        jsonObject.put("serverID",serverID);
+        jsonObject.put("clients", clients);
+        jsonObject.put("chatrooms", chatRooms);
+        return jsonObject;
+    }
+
+    public static JSONObject getLeaderStateUpdateComplete(String serverID) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "leaderstateupdatecomplete");
+        jsonObject.put("serverID", serverID);
+        return jsonObject;
+    }
 }

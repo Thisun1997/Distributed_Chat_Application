@@ -12,6 +12,7 @@ public class CoordinatorMessageTimeout extends MessageTimeout {
     public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
         if(!interrupted.get() && Server.getInstance().getOngoingElection()){
             try{
+                //if no coordinator message received, send the nomination to the next highest server
                 ServerInfo highestPriorityCandidate = Server.getInstance().getHighestPriorityCandidate();
                 FastBullyAlgorithm nominationFBA;
                 if(highestPriorityCandidate != null){

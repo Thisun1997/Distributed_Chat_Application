@@ -2,6 +2,8 @@ package Server;
 
 import Client.ClientThread;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -22,6 +24,7 @@ public class Server {
     private AtomicBoolean ongoingElection = new AtomicBoolean(false);;
     private AtomicBoolean answerMessageReceived = new AtomicBoolean(false);;
     private AtomicBoolean viewMessageReceived = new AtomicBoolean(false);;
+    private AtomicBoolean leaderUpdateComplete = new AtomicBoolean(false);
     private Long electionAnswerTimeout;
     private Long electionCoordinatorTimeout;
 
@@ -37,6 +40,10 @@ public class Server {
             serverInstance = new Server();
         }
         return serverInstance;
+    }
+
+    public String getServerID() {
+        return serverID;
     }
 
     public String getAddress() {
@@ -71,7 +78,19 @@ public class Server {
         return otherServers;
     }
 
-    private void startServer(ServerInfo serverInfo){
+    public ConcurrentHashMap<String, Room> getRoomList() {
+        return roomList;
+    }
+
+    public synchronized List<String> getClientIDList() {
+        List<String> clientIdList = new ArrayList<>();
+        for(Room room:roomList.values()){
+            clientIdList.addAll(room.getClientList().keySet());
+        }
+        return clientIdList;
+    }
+
+    private synchronized void startServer(ServerInfo serverInfo){
         this.serverID = serverInfo.getServerID();
         this.address = serverInfo.getAddress();
         this.serverPort = serverInfo.getServerPort();
@@ -81,7 +100,7 @@ public class Server {
         roomList.put(getMainHallID(serverID), mainHall);
     }
 
-    public void addServer(String selfID, String serverID, String address, Integer serverPort, Integer clientPort){
+    public synchronized void addServer(String selfID, String serverID, String address, Integer serverPort, Integer clientPort){
         ServerInfo serverInfo = new ServerInfo(serverID, address, serverPort, clientPort);
         if(Objects.equals(selfID, serverID)){
             startServer(serverInfo);
@@ -102,7 +121,7 @@ public class Server {
         return "MainHall-"+serverID;
     }
 
-    public void addClient(ClientThread clientThread, Thread thread){
+    public synchronized void addClient(ClientThread clientThread, Thread thread){
         clientThreadList.put(thread.getId(),clientThread);
     }
 
@@ -127,6 +146,15 @@ public class Server {
                 if (Integer.parseInt(selfServerInfo.getServerID()) < Integer.parseInt(serverInfo.getServerID())) {
                     tempCandidateServers.put(serverInfo.getServerID(), serverInfo);
                 }
+            }
+        }
+    }
+
+    public synchronized void removeTempCandidateServer(ServerInfo serverInfo) {
+        ServerInfo selfServerInfo = getSelfServerInfo();
+        if (null != serverInfo) {
+            if (null != selfServerInfo) {
+                tempCandidateServers.remove(serverInfo.getServerID());
             }
         }
     }
@@ -177,6 +205,14 @@ public class Server {
 
     public void setElectionNominationTimeout(Long electionNominationTimeout) {
         this.electionNominationTimeout = electionNominationTimeout*(getOtherServers().size()+1-getLowPriorityServers().size());
+    }
+
+    public void setLeaderUpdateComplete(boolean updateComplete) {
+        this.leaderUpdateComplete.set(updateComplete);
+    }
+
+    public boolean getLeaderUpdateComplete() {
+        return leaderUpdateComplete.get();
     }
 
 }

@@ -10,7 +10,7 @@ public class Room {
     private final String serverID;
     private final String ownerClientID;
 
-    private final HashMap<String,Client> clientList = new HashMap<>();;
+    private final HashMap<String,Client> clientList = new HashMap<>();
 
     public Room(String roomID, String serverID, String ownerClientID){
         this.roomID = roomID;

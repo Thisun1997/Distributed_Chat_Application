@@ -1,5 +1,7 @@
 package Client;
 
+import Server.Room;
+import Server.Server;
 import consensus.Leader;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -8,9 +10,12 @@ import org.json.simple.parser.ParseException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Serial;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static Client.ClientMessage.*;
 
@@ -30,12 +35,22 @@ public class ClientThread implements Runnable{
 
     private void newIdentity(String identity) {
 //        TODO - implement adding a new client
-        String approve = "true";
+        if(Server.getInstance().getLeaderUpdateComplete()){
+            String approve = "true";
 //        this.client = new Client(identity, ,this.clientSocket);
-        JSONObject msgClient = newIdentityReply(approve);
+            JSONObject msgClient = newIdentityReply(approve);
 //        JSONObject msgBroadcast = roomChangeReply(identity,"", );
-        System.out.println("identity");
-        System.out.println(Leader.getInstance().getLeaderID());
+            System.out.println("identity");
+            System.out.println(Leader.getInstance().getLeaderID());
+            ConcurrentHashMap<String, List<Room>> globalRoomList = Leader.getInstance().getGlobalRoomList(); //server_id, cliient_id list
+            for(String key: globalRoomList.keySet()){
+                List<Room> r_list = globalRoomList.get(key);
+                for(Room r:r_list){
+                    System.out.append(r.getRoomID());
+                }
+            }
+            System.out.println(Server.getInstance().getLeaderUpdateComplete());
+        }
     }
 
     private void list() {
