@@ -215,5 +215,8 @@ public class Server {
         return leaderUpdateComplete.get();
     }
 
+    public ClientThread getClientHandlerThread(Long threadID) {
+        return clientThreadList.get(threadID);
+    }
 }
 

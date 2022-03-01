@@ -21,7 +21,6 @@ public class FastBullyAlgorithm implements Runnable{
 
     String option;
     JobExecutionContext jobExecutionContext = null;
-    static Integer serverCount = 0;
     static JSONObject jsonMessage = null;
     static ServerInfo initiatingServerInfo;
     static ServerInfo iAmUpSender;
@@ -45,6 +44,7 @@ public class FastBullyAlgorithm implements Runnable{
         Server.getInstance().initTempCandidateServers();
         Server.getInstance().setAnswerMessageReceived(false);
         Server.getInstance().setOngoingElection(true);
+        Server.getInstance().setLeaderUpdateComplete(false);
         Leader.getInstance().reset();
 
         initiatingServerInfo = Server.getInstance().getSelfServerInfo();
@@ -57,7 +57,7 @@ public class FastBullyAlgorithm implements Runnable{
                 CandidateServerList.add(candidateServers.get(serverID));
             }
 
-        MessagePassing.sendServerBroadcast(ServerMessage.getElection(initiatingServerInfo.getServerID()),CandidateServerList);
+        MessagePassing.sendServerBroadcast(ServerMessage.electionMessage(initiatingServerInfo.getServerID()),CandidateServerList);
         System.out.println("election message sent.");
         startWaitingForAnswerMessage(electionTimeOut);
 
@@ -79,7 +79,7 @@ public class FastBullyAlgorithm implements Runnable{
         initiatingServerInfo = Server.getInstance().getOtherServers().get(initiatingServerID);
         ServerInfo selfServerInfo = Server.getInstance().getSelfServerInfo();
         try {
-            MessagePassing.sendServer(ServerMessage.getAnswer(selfServerInfo.getServerID()), initiatingServerInfo);
+            MessagePassing.sendServer(ServerMessage.answerMessage(selfServerInfo.getServerID()), initiatingServerInfo);
             System.out.println("answer message sent.");
         } catch (IOException e) {
             e.printStackTrace();

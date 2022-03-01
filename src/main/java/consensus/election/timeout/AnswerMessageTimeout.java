@@ -3,9 +3,11 @@ package consensus.election.timeout;
 import Server.Server;
 import consensus.Leader;
 import consensus.election.FastBullyAlgorithm;
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
+@DisallowConcurrentExecution
 public class AnswerMessageTimeout extends MessageTimeout{
     @Override
     public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {

@@ -7,7 +7,7 @@ import java.util.List;
 
 public class ServerMessage {
 
-    public static JSONObject getElection(String serverID) {
+    public static JSONObject electionMessage(String serverID) {
         // {"option": "election", "source": "s1"}
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("option", "election");
@@ -15,7 +15,7 @@ public class ServerMessage {
         return jsonObject;
     }
 
-    public static JSONObject getAnswer(String serverID) {
+    public static JSONObject answerMessage(String serverID) {
         // {"option": "ok", "sender": "s1"}
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("option", "answer");
@@ -83,10 +83,27 @@ public class ServerMessage {
         return jsonObject;
     }
 
-    public static JSONObject getLeaderStateUpdateComplete(String serverID) {
+    public static JSONObject leaderStateUpdateComplete(String serverID) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("type", "leaderstateupdatecomplete");
         jsonObject.put("serverID", serverID);
+        return jsonObject;
+    }
+
+    public static JSONObject clientIdApprovalRequest(String identity, String serverID, String threadID) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "clientidapprovalrequest");
+        jsonObject.put("clientID", identity);
+        jsonObject.put("serverID", serverID);
+        jsonObject.put("threadID", threadID);
+        return jsonObject;
+    }
+
+    public static JSONObject clientIdApprovalReply(String reply, String threadID) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "clientidapprovalreply");
+        jsonObject.put("reply", reply);
+        jsonObject.put("threadID", threadID);
         return jsonObject;
     }
 }

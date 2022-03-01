@@ -1,11 +1,11 @@
 package consensus;
 
 import java.io.IOException;
-import java.security.SecureRandom;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import Client.Client;
 import MessagePassing.MessagePassing;
 import Server.Room;
 import Server.Server;
@@ -38,11 +38,11 @@ public class Leader {
         this.leaderID = leaderID;
     }
 
-    public ConcurrentHashMap<String, List<String>> getGlobalClientList() {
+    public synchronized ConcurrentHashMap<String, List<String>> getGlobalClientList() {
         return globalClientList;
     }
 
-    public ConcurrentHashMap<String, List<Room>> getGlobalRoomList() {
+    public synchronized ConcurrentHashMap<String, List<Room>> getGlobalRoomList() {
         return globalRoomList;
     }
 
@@ -55,7 +55,7 @@ public class Leader {
                 ServerInfo destServer = Server.getInstance().getOtherServers().get(serverID);
                 try {
                     MessagePassing.sendServer(
-                            ServerMessage.getLeaderStateUpdateComplete(String.valueOf(Server.getInstance().getServerID())),
+                            ServerMessage.leaderStateUpdateComplete(String.valueOf(Server.getInstance().getServerID())),
                             destServer
                     );
                 } catch (IOException e) {
@@ -73,6 +73,24 @@ public class Leader {
         synchronized (Leader.getInstance()){
             globalRoomList.clear();
             globalClientList.clear();
+        }
+    }
+
+    public boolean isClientIDTaken(String identity){
+        for(String clientID: globalClientList.keySet()){
+            if(globalClientList.get(clientID).contains(identity)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public synchronized void addToGlobalClientAndRoomList(String clientID, String serverID, String roomID){
+        globalClientList.get(serverID).add(clientID);
+        for(Room room: globalRoomList.get(serverID)){
+            if(room.getRoomID() == roomID){
+                room.addClient(new Client(clientID, roomID, null));
+            }
         }
     }
 }

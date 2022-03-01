@@ -1,5 +1,7 @@
 package Server;
 
+import Client.ClientThread;
+import MessagePassing.MessagePassing;
 import consensus.Leader;
 import consensus.election.FastBullyAlgorithm;
 import org.json.simple.JSONArray;
@@ -68,8 +70,31 @@ public class ServerThread implements Runnable{
                         System.out.println("leader "+serverID+" update done..");
 //                        FastBullyAlgorithm FBA = new FastBullyAlgorithm("");
 //                        FBA.stopWaitingForUpdateCompleteMessage();
-                        Thread.sleep(1000);
+                        Thread.sleep(500);
                         Server.getInstance().setLeaderUpdateComplete(true);
+                    }
+                    else if(Objects.equals(type, "clientidapprovalrequest")){
+                        String clientID = jsonObject.get("clientID").toString();
+                        String serverID = jsonObject.get("serverID").toString();
+                        String threadID = jsonObject.get("threadID").toString();
+
+                        boolean clientIDTaken = Leader.getInstance().isClientIDTaken(clientID);
+                        String reply = String.valueOf(clientIDTaken);
+                        if(!clientIDTaken){
+                            Leader.getInstance().addToGlobalClientAndRoomList(clientID, serverID, Server.getInstance().getMainHallID(serverID));
+                        }
+                        ServerInfo destServerInfo = Server.getInstance().getOtherServers().get(serverID);
+                        MessagePassing.sendServer(ServerMessage.clientIdApprovalReply(reply,threadID), destServerInfo);
+                    }
+                    else if(Objects.equals(type, "clientidapprovalreply")){
+                        int clientIDTaken = Boolean.parseBoolean(jsonObject.get("reply").toString()) ? 0 : 1;
+                        Long threadID = Long.parseLong(jsonObject.get("threadID").toString());
+
+                        ClientThread clientThread = Server.getInstance().getClientHandlerThread(threadID);
+                        clientThread.setIsClientApproved(clientIDTaken);
+                        synchronized (clientThread) {
+                            clientThread.notifyAll();
+                        }
                     }
                 }
 
