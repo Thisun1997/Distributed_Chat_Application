@@ -129,7 +129,7 @@ public class ClientThread implements Runnable{
 
         tempRoomList = null;
 
-        while (!Leader.getInstance().isLeaderElected()) {
+        while(!Server.getInstance().getLeaderUpdateComplete()) {
             Thread.sleep(1000);
         }
 
