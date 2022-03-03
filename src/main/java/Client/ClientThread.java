@@ -134,8 +134,51 @@ public class ClientThread implements Runnable{
 //        TODO - implement creating a new chatroom
     }
 
-    private void moveJoin(String roomid, String newRoomID, String clientID) {
-//        TODO - implement joining a room in another server
+    private void moveJoin(String roomid, String newRoomID, String clientID) throws IOException, InterruptedException {
+
+        roomid = (Server.getInstance().getRoomList().containsKey(roomid))? roomid:Server.getInstance().getMainHallID(serverID);
+        this.client = new Client(clientID, roomid, clientSocket);
+        Server.getInstance().getRoomList().get(roomid).addClient(client);
+    
+        //create broadcast list
+        HashMap<String, Client> newClientList = Server.getInstance().getRoomList().get(roomid).getClientList();
+
+        ArrayList<Socket> SocketList = new ArrayList<>();
+        for (String each : newClientList.keySet()) {
+            SocketList.add(newClientList.get(each).getSocket());
+        }
+
+        MessagePassing.sendClient(
+            ClientMessage.serverChangeReply(
+                "true",
+                Server.getInstance().getServerID()), 
+                clientSocket);
+
+        MessagePassing.sendClient(
+            ClientMessage.roomChangeReply(
+                client.getClientID(),
+                roomid,newRoomID),
+                clientSocket);
+
+
+        while(!Server.getInstance().getLeaderUpdateComplete()) {
+            Thread.sleep(1000);
+        }
+
+        if(Leader.getInstance().getLeaderID() == Server.getInstance().getServerID()){
+            Leader.getInstance().addToGlobalClientAndRoomList(clientID, Server.getInstance().getServerID(), newRoomID);
+        
+        }else {
+            MessagePassing.sendToLeader(
+                ServerMessage.getMoveJoinRequest(
+                    client.getClientID(),
+                    newRoomID,
+                    roomid,
+                    Server.getInstance().getServerID(),
+                    String.valueOf(Thread.currentThread().getId())
+                )
+            );
+        }
     }
 
     private void deleteRoom(String roomid) {
