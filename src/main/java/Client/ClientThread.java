@@ -150,8 +150,57 @@ public class ClientThread implements Runnable{
 //        TODO - Quiting the server
     }
 
-    private void joinRoom(String roomid) {
-//        TODO - Quiting the server
+    private void joinRoom(String roomid) throws IOException, InterruptedException {
+
+        String formerRoomID = client.getRoomID();
+
+        if(client.isRoomOwner()){
+            System.out.println("WARN : Join room denied, Client" + client.getClientID() + " Owns a room");
+
+            MessagePassing.sendClient(
+                ClientMessage.roomChangeReply(
+                    client.getClientID(),
+                    formerRoomID,
+                    formerRoomID
+                ), 
+                clientSocket);
+
+        }else if(Server.getInstance().getRoomList().containsKey(roomid)){ //local room change
+            
+            client.setClientID(roomid);
+            Server.getInstance().getRoomList().get(formerRoomID).removeClient(client.getClientID());
+            Server.getInstance().getRoomList().get(roomid).addClient(client);
+
+            System.out.println("INFO : client [" + client.getClientID() + "] joined room :" + roomid);
+        
+
+            // creating broadcast list
+            HashMap<String, Client> newClientList = Server.getInstance().getRoomList().get(roomid).getClientList();
+            HashMap<String, Client> oldClientList = Server.getInstance().getRoomList().get(formerRoomID).getClientList();
+            HashMap<String, Client> clientList = new HashMap<>();
+            clientList.putAll(oldClientList);
+            clientList.putAll(newClientList);
+
+            ArrayList<Socket> SocketList = new ArrayList<>();
+            for (String each : clientList.keySet()) {
+                SocketList.add(clientList.get(each).getSocket());
+            }
+            
+            MessagePassing.sendClient(
+                ClientMessage.roomChangeReply(
+                    client.getClientID(),
+                    formerRoomID,
+                    roomid), 
+                    clientSocket);
+        }
+
+        while(!Server.getInstance().getLeaderUpdateComplete()) {
+            Thread.sleep(1000);
+        }
+
+        // if self is leader update leader state directly
+
+
     }
 
     @Override
