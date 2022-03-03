@@ -29,6 +29,9 @@ public class ClientThread implements Runnable{
 
     private boolean quit = false;
 
+    Object lock = new Object();
+    private List<String> tempRoomList;
+
     public ClientThread( Socket clientSocket){
         this.clientSocket = clientSocket;
         this.serverID = Server.getInstance().getServerID();
@@ -122,9 +125,43 @@ public class ClientThread implements Runnable{
 
     }
 
-    private void list() {
-//        TODO - implement listing the chatrooms in the connected server
+    private void list() throws IOException, InterruptedException {
+
+        tempRoomList = null;
+
+        while (!Leader.getInstance().isLeaderElected()) {
+            Thread.sleep(1000);
+        }
+
+
+        if(Leader.getInstance().getLeaderID() == Server.getInstance().getServerID()){
+            tempRoomList = (List<String>) Leader.getInstance().getGlobalRoomList();
+
+        } else {
+            MessagePassing.sendToLeader(
+                ServerMessage.getListRequest(
+                    client.getClientID(), 
+                    String.valueOf(Thread.currentThread().getId()), 
+                    Server.getInstance().getServerID())
+                
+            );
+            
+            synchronized(lock) {
+                while(tempRoomList == null){
+                    lock.wait(7000);
+                }
+            }
+
+        }
+
+        if(tempRoomList != null){
+            System.out.println("INFO : Recieved rooms in the system :" + tempRoomList);
+            MessagePassing.sendClient(
+                ClientMessage.listReply(tempRoomList),
+                clientSocket);
+        }
     }
+
 
     private void who() {
 //        TODO - implement listing the clients in the chatroom

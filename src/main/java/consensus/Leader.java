@@ -38,6 +38,11 @@ public class Leader {
         this.leaderID = leaderID;
     }
 
+    public boolean isLeaderElected() {
+        //TODO using leader election algorithm
+        return false;
+    }
+
     public synchronized ConcurrentHashMap<String, List<String>> getGlobalClientList() {
         return globalClientList;
     }
