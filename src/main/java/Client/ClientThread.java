@@ -127,8 +127,23 @@ public class ClientThread implements Runnable{
 //        TODO - implement listing the chatrooms in the connected server
     }
 
-    private void who() {
-//        TODO - implement listing the clients in the chatroom
+    private void who() throws IOException {
+
+        String roomID = client.getRoomID();
+        Room room = Server.getInstance().getRoomList().get(roomID);
+
+        HashMap<String, Client> clientList = room.getClientList();
+        List<String> participantsList = new ArrayList<>(clientList.keySet());
+        String ownerClientID = room.getOwnerClientID();
+
+        System.out.println("LOG  : participants in room [" + roomID + "] : " + participantsList);
+        MessagePassing.sendClient(
+            ClientMessage.whoReply(
+                roomID,
+                participantsList,
+                ownerClientID),
+                clientSocket
+        );
     }
 
     private void createRoom(String roomid) {
