@@ -87,17 +87,19 @@ public class ServerThread implements Runnable{
                         MessagePassing.sendServer(ServerMessage.clientIdApprovalReply(reply,threadID), destServerInfo);
                     }
                     else if(Objects.equals(type, "clientidapprovalreply")){
-                        int clientIDTaken = Boolean.parseBoolean(jsonObject.get("reply").toString()) ? 0 : 1;
+                        int IsClientApproved = Boolean.parseBoolean(jsonObject.get("reply").toString()) ? 0 : 1;
                         Long threadID = Long.parseLong(jsonObject.get("threadID").toString());
 
                         ClientThread clientThread = Server.getInstance().getClientHandlerThread(threadID);
-                        clientThread.setIsClientApproved(clientIDTaken);
+                        clientThread.setIsClientApproved(IsClientApproved);
                         synchronized (clientThread) {
                             clientThread.notifyAll();
                         }
                     }
+                }else {
+                    System.out.println("WARN : Command error, Corrupted JSON from Server");
                 }
-
+                serverSocket.close();
             }
         }catch (IOException | ParseException | InterruptedException e) {
             e.printStackTrace();
