@@ -222,7 +222,7 @@ public class Server {
     //newly added
     public void removeClient (String clientID, String formerRoom, Long threadID){
         this.roomList.get(formerRoom).removeClient(clientID);
-        this.clientThreadList.remove(threadID)
+        this.clientThreadList.remove(threadID);
     }
 }
 
