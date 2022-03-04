@@ -93,4 +93,21 @@ public class Leader {
             }
         }
     }
+
+    // --------newly added-----------
+    public String getServerIdIfRoomExist(String roomId){
+        for(String serverId: globalRoomList.keySet()){
+            List<Room> tempRoomList = globalRoomList.get(serverId);
+            if(tempRoomList.contains(roomId)){
+                return serverId;
+            }
+        }
+        return null;
+    }
+
+    public void localJoinRoomClient(Client clinet, String formerRoomID) { // ----need to check----
+        List<String> tempClientList = this.globalClientList.get(this.getLeaderID());
+        tempClientList.remove(clinet.getClientID());
+        addToGlobalClientAndRoomList(clinet.getClientID(),this.getLeaderID(),formerRoomID);
+    }
 }
