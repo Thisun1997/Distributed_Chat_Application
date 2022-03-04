@@ -88,12 +88,12 @@ public class ClientThread implements Runnable{
             if(isClientApproved == 1){
                 String mainHallID = Server.getInstance().getMainHallID(Server.getInstance().getServerID());
                 this.client = new Client(identity,mainHallID,clientSocket);
-                //add client to mainhall
-                Server.getInstance().getRoomList().get(mainHallID).addClient(client);
                 //If I am the leader update the global list.
                 if(Objects.equals(Server.getInstance().getServerID(), Leader.getInstance().getLeaderID())){
                     Leader.getInstance().addToGlobalClientAndRoomList(identity,Server.getInstance().getServerID(),mainHallID);
                 }
+                //add client to mainhall
+                Server.getInstance().getRoomList().get(mainHallID).addClient(client);
                 //broadcast to all the clients in mainhall
                 HashMap<String, Client> mainHallClientList =  Server.getInstance().getRoomList().get(mainHallID).getClientList();
                 ArrayList<Socket> socketList = new ArrayList<>();
@@ -112,6 +112,7 @@ public class ClientThread implements Runnable{
                     MessagePassing.sendClient(ClientMessage.newIdentityReply("false"), clientSocket);
                 }
             }
+            isClientApproved = -1;
         }
         //if client id format does not match notify user
         else{
