@@ -129,7 +129,7 @@ public class ClientThread implements Runnable{
 
     private void who() throws IOException {
 
-        String roomID = client.getClientID();
+        String roomID = client.getRoomID();
         Room room = Server.getInstance().getRoomList().get(roomID);
 
         HashMap<String, Client> clientList = room.getClientList();
