@@ -3,6 +3,7 @@ package consensus;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import Client.Client;
@@ -30,11 +31,11 @@ public class Leader {
         return leaderInstance;
     }
 
-    public String getLeaderID() {
+    public synchronized String getLeaderID() {
         return leaderID;
     }
 
-    public void setLeaderID(String leaderID) {
+    public synchronized void setLeaderID(String leaderID) {
         this.leaderID = leaderID;
     }
 
@@ -76,7 +77,7 @@ public class Leader {
         }
     }
 
-    public boolean isClientIDTaken(String identity){
+    public synchronized boolean isClientIDTaken(String identity){
         for(String clientID: globalClientList.keySet()){
             if(globalClientList.get(clientID).contains(identity)){
                 return true;
@@ -88,7 +89,7 @@ public class Leader {
     public synchronized void addToGlobalClientAndRoomList(String clientID, String serverID, String roomID){
         globalClientList.get(serverID).add(clientID);
         for(Room room: globalRoomList.get(serverID)){
-            if(room.getRoomID() == roomID){
+            if(Objects.equals(room.getRoomID(), roomID)){
                 room.addClient(new Client(clientID, roomID, null));
             }
         }

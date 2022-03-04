@@ -91,12 +91,12 @@ public class ClientThread implements Runnable{
             if(isClientApproved == 1){
                 String mainHallID = Server.getInstance().getMainHallID(Server.getInstance().getServerID());
                 this.client = new Client(identity,mainHallID,clientSocket);
-                //add client to mainhall
-                Server.getInstance().getRoomList().get(mainHallID).addClient(client);
                 //If I am the leader update the global list.
                 if(Objects.equals(Server.getInstance().getServerID(), Leader.getInstance().getLeaderID())){
                     Leader.getInstance().addToGlobalClientAndRoomList(identity,Server.getInstance().getServerID(),mainHallID);
                 }
+                //add client to mainhall
+                Server.getInstance().getRoomList().get(mainHallID).addClient(client);
                 //broadcast to all the clients in mainhall
                 HashMap<String, Client> mainHallClientList =  Server.getInstance().getRoomList().get(mainHallID).getClientList();
                 ArrayList<Socket> socketList = new ArrayList<>();
@@ -115,6 +115,7 @@ public class ClientThread implements Runnable{
                     MessagePassing.sendClient(ClientMessage.newIdentityReply("false"), clientSocket);
                 }
             }
+            isClientApproved = -1;
         }
         //if client id format does not match notify user
         else{
@@ -163,8 +164,23 @@ public class ClientThread implements Runnable{
     }
 
 
-    private void who() {
-//        TODO - implement listing the clients in the chatroom
+    private void who() throws IOException {
+
+        String roomID = client.getRoomID();
+        Room room = Server.getInstance().getRoomList().get(roomID);
+
+        HashMap<String, Client> clientList = room.getClientList();
+        List<String> participantsList = new ArrayList<>(clientList.keySet());
+        String ownerClientID = room.getOwnerClientID();
+
+        System.out.println("LOG  : participants in room [" + roomID + "] : " + participantsList);
+        MessagePassing.sendClient(
+            ClientMessage.whoReply(
+                roomID,
+                participantsList,
+                ownerClientID),
+                clientSocket
+        );
     }
 
     private void createRoom(String roomid) {
