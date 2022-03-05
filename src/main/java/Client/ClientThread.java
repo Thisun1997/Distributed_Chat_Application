@@ -206,7 +206,7 @@ public class ClientThread implements Runnable{
             }
             
             // if self is leader update leader state directly
-            if(Server.getInstance().getServerID() == Leader.getInstance().getLeaderID()){
+            if(Server.getInstance().getServerID().equals(Leader.getInstance().getLeaderID())){
                 Leader.getInstance().localJoinRoomClient(client, formerRoomID);
                     
             }else {
@@ -230,7 +230,7 @@ public class ClientThread implements Runnable{
             isJoinRoomApproved = -1;
 
             //check if room id exist and if init route
-            if(Leader.getInstance().getLeaderID() == Server.getInstance().getServerID()){
+            if(Leader.getInstance().getLeaderID().equals(Server.getInstance().getServerID())){
                 String serverIDofTargetRoom = Leader.getInstance().getServerIdIfRoomExist(roomid);
             
                 isJoinRoomApproved = serverIDofTargetRoom != null ? 1 : 0;
