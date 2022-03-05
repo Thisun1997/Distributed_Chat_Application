@@ -218,5 +218,11 @@ public class Server {
     public ClientThread getClientHandlerThread(Long threadID) {
         return clientThreadList.get(threadID);
     }
+
+    // remove client 
+    public void removeClient (String clientID, String formerRoom, Long threadID){
+        this.roomList.get(formerRoom).removeClient(clientID);
+        this.clientThreadList.remove(threadID);
+    }
 }
 

@@ -196,8 +196,36 @@ public class ClientThread implements Runnable{
 //        TODO - implement broadcasting the message to clients in the chatroom
     }
 
-    private void quit() {
+    private void quit() throws IOException {
 //        TODO - Quiting the server
+        if(client.isRoomOwner()){
+            deleteRoom(client.getRoomID());
+            System.out.println("INFO : Deleted room before " + client.getClientID() + " quit");
+        }
+
+        HashMap<String,Client> formerClientList = Server.getInstance().getRoomList().get(client.getRoomID()).getClientList();
+
+        ArrayList<Socket> socketList = new ArrayList<>();
+        for(String each_client: formerClientList.keySet()){
+            socketList.add(formerClientList.get(each_client).getSocket());
+        }
+
+        MessagePassing.sendClient(ClientMessage.roomChangeReply(client.getClientID(), "", client.getRoomID()), clientSocket);
+
+        //update local server
+        Server.getInstance().removeClient(client.getClientID(), client.getRoomID(), Thread.currentThread().getId());
+
+        //update global list - Leader class
+        //send quit message to leader if itself is not leader
+        if(!Leader.getInstance().getLeaderID().equals(Server.getInstance().getServerID())){
+            MessagePassing.sendToLeader(ServerMessage.getQuit(client.getClientID(), client.getRoomID()));
+        }else{
+            Leader.getInstance().removeClient(client.getClientID(), client.getRoomID());
+        }
+
+        if(! clientSocket.isClosed()) clientSocket.close();
+        quit = true;
+        System.out.println("INFO : " + client.getClientID() + " quit");
     }
 
     private void joinRoom(String roomid) {
