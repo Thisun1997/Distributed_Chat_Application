@@ -106,4 +106,23 @@ public class ServerMessage {
         jsonObject.put("threadID", threadID);
         return jsonObject;
     }
+
+    public static JSONObject listRequest(String clientID, String threadID, String serverID){
+        // {"type" : "listrequest", "clientid" : "Adel", "sender" : 1, "threadid" : 12 }
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "listrequest");
+        jsonObject.put("serverID", serverID);
+        jsonObject.put("clientID", clientID);
+        jsonObject.put("threadID", threadID);
+        return jsonObject;
+    }
+
+    public static JSONObject listResponse(List<String> roomIDList, String threadID) {
+        // {"type" : "listresponse", "rooms" : ["room-1","MainHall-s1","MainHall-s2"], "threadid" : 12 }
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "listresponse");
+        jsonObject.put("threadID", threadID);
+        jsonObject.put("rooms", roomIDList);
+        return jsonObject;
+    }
 }

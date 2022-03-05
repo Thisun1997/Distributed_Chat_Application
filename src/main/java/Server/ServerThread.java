@@ -96,6 +96,28 @@ public class ServerThread implements Runnable{
                             clientThread.notifyAll();
                         }
                     }
+                    else if(Objects.equals(type, "listrequest")){
+                        String clientID = jsonObject.get("clientID").toString();
+                        String threadID = jsonObject.get("threadID").toString();
+                        String serverID = jsonObject.get("serverID").toString();
+
+                        ServerInfo destServerInfo = Server.getInstance().getOtherServers().get(serverID);
+
+                        MessagePassing.sendServer(
+                                ServerMessage.listResponse(Leader.getInstance().getRoomIDList(), threadID),
+                                destServerInfo
+                        );
+                    }
+                    else if(Objects.equals(type, "listresponse")){
+                        Long threadID = Long.parseLong(jsonObject.get("threadID").toString());
+                        List<String> rooms = new ArrayList((JSONArray) jsonObject.get("rooms"));
+
+                        ClientThread clientThread = Server.getInstance().getClientHandlerThread(threadID);
+                        synchronized (clientThread) {
+                            clientThread.setTempRoomList(rooms);
+                            clientThread.notifyAll();
+                        }
+                    }
                 }else {
                     System.out.println("WARN : Command error, Corrupted JSON from Server");
                 }

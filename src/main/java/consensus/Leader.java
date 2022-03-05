@@ -94,4 +94,14 @@ public class Leader {
             }
         }
     }
+
+    public synchronized List<String> getRoomIDList() {
+        List<String> roomIDList = new ArrayList<>();
+        for(String serverID: Leader.getInstance().getGlobalRoomList().keySet()){
+            for(Room room: Leader.getInstance().getGlobalRoomList().get(serverID)){
+                roomIDList.add(room.getRoomID());
+            }
+        }
+        return roomIDList;
+    }
 }

@@ -26,20 +26,21 @@ public class ClientThread implements Runnable{
     private String serverID;
     private Client client;
     private int isClientApproved = -1;
-
     private boolean quit = false;
+
+    private List<String> tempRoomList;
 
     public ClientThread( Socket clientSocket){
         this.clientSocket = clientSocket;
         this.serverID = Server.getInstance().getServerID();
     }
 
-    public int getIsClientApproved() {
-        return isClientApproved;
-    }
-
     public void setIsClientApproved(int isClientApproved) {
         this.isClientApproved = isClientApproved;
+    }
+
+    public void setTempRoomList(List<String> tempRoomList) {
+        this.tempRoomList = tempRoomList;
     }
 
     private void newIdentity(String identity) throws InterruptedException, IOException {
@@ -123,9 +124,42 @@ public class ClientThread implements Runnable{
 
     }
 
-    private void list() {
-//        TODO - implement listing the chatrooms in the connected server
+    private void list() throws IOException, InterruptedException {
+
+        tempRoomList = null;
+
+        while(!Server.getInstance().getLeaderUpdateComplete()) {
+            Thread.sleep(1000);
+        }
+
+        if(Objects.equals(Leader.getInstance().getLeaderID(), Server.getInstance().getServerID())){
+            tempRoomList = Leader.getInstance().getRoomIDList();
+
+        } else {
+            MessagePassing.sendToLeader(
+                ServerMessage.listRequest(
+                    client.getClientID(), 
+                    String.valueOf(Thread.currentThread().getId()), 
+                    Server.getInstance().getServerID())
+                
+            );
+            
+            synchronized(this) {
+                while(tempRoomList == null){
+                    this.wait(7000);
+                }
+            }
+
+        }
+
+        if(tempRoomList != null){
+            System.out.println("INFO : Recieved rooms in the system :" + tempRoomList);
+            MessagePassing.sendClient(
+                ClientMessage.listReply(tempRoomList),
+                clientSocket);
+        }
     }
+
 
     private void who() throws IOException {
 
