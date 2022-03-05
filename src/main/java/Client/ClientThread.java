@@ -26,10 +26,8 @@ public class ClientThread implements Runnable{
     private String serverID;
     private Client client;
     private int isClientApproved = -1;
-
     private boolean quit = false;
 
-    Object lock = new Object();
     private List<String> tempRoomList;
 
     public ClientThread( Socket clientSocket){
@@ -37,12 +35,12 @@ public class ClientThread implements Runnable{
         this.serverID = Server.getInstance().getServerID();
     }
 
-    public int getIsClientApproved() {
-        return isClientApproved;
-    }
-
     public void setIsClientApproved(int isClientApproved) {
         this.isClientApproved = isClientApproved;
+    }
+
+    public void setTempRoomList(List<String> tempRoomList) {
+        this.tempRoomList = tempRoomList;
     }
 
     private void newIdentity(String identity) throws InterruptedException, IOException {
@@ -134,22 +132,21 @@ public class ClientThread implements Runnable{
             Thread.sleep(1000);
         }
 
-
-        if(Leader.getInstance().getLeaderID() == Server.getInstance().getServerID()){
-            tempRoomList = (List<String>) Leader.getInstance().getGlobalRoomList();
+        if(Objects.equals(Leader.getInstance().getLeaderID(), Server.getInstance().getServerID())){
+            tempRoomList = Leader.getInstance().getRoomIDList();
 
         } else {
             MessagePassing.sendToLeader(
-                ServerMessage.getListRequest(
+                ServerMessage.listRequest(
                     client.getClientID(), 
                     String.valueOf(Thread.currentThread().getId()), 
                     Server.getInstance().getServerID())
                 
             );
             
-            synchronized(lock) {
+            synchronized(this) {
                 while(tempRoomList == null){
-                    lock.wait(7000);
+                    this.wait(7000);
                 }
             }
 
