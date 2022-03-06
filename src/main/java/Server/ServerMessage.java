@@ -136,4 +136,14 @@ public class ServerMessage {
         jsonObject.put("serverID", serverID);
         return jsonObject;
     }
+
+    public static JSONObject getDeleteRoomRequest(String ownerID, String roomID, String mainHallID) {
+        // {"type" : "deleterequest", "owner" : "Adel", "roomid" : "jokes", "mainhall" : "MainHall-s1" }
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "deleterequest");
+        jsonObject.put("owner", ownerID);
+        jsonObject.put("roomid", roomID);
+        jsonObject.put("mainhall", mainHallID);
+        return jsonObject;
+    }
 }

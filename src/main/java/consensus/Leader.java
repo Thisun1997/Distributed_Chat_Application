@@ -114,4 +114,7 @@ public class Leader {
         }
 
     }
+
+    public void removeRoom(String roomid, String mainHallRoomID, String clientID) {
+    }
 }
