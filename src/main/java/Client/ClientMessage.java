@@ -79,7 +79,7 @@ public class ClientMessage {
     }
 
     @SuppressWarnings("unchecked")
-    public static JSONObject broadcat(String clientID, String content) {
+    public static JSONObject broadcastMessage(String clientID, String content) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("type", "message");
         jsonObject.put("identity", clientID);

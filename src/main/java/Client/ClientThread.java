@@ -205,7 +205,7 @@ public class ClientThread implements Runnable{
                 socketsList.add(clientList.get(client).getSocket());
             }
         }
-        MessagePassing.sendClient(ClientMessage.broadcat(clientID, content), clientSocket);
+        MessagePassing.sendBroadcast(ClientMessage.broadcastMessage(clientID, content), socketsList);
     }
 
     private void quit() {
