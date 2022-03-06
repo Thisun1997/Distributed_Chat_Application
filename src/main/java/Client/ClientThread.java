@@ -222,7 +222,7 @@ public class ClientThread implements Runnable{
             socketList.add(formerClientList.get(each_client).getSocket());
         }
 
-        MessagePassing.sendClient(ClientMessage.roomChangeReply(client.getClientID(), "", client.getRoomID()), clientSocket);
+        MessagePassing.sendBroadcast(ClientMessage.roomChangeReply(client.getClientID(), client.getRoomID(), ""), socketList);
 
         //update local server
         Server.getInstance().removeClient(client.getClientID(), client.getRoomID(), Thread.currentThread().getId());
@@ -230,9 +230,9 @@ public class ClientThread implements Runnable{
         //update global list - Leader class
         //send quit message to leader if itself is not leader
         if(!Leader.getInstance().getLeaderID().equals(Server.getInstance().getServerID())){
-            MessagePassing.sendToLeader(ServerMessage.getQuit(client.getClientID(), client.getRoomID()));
+            MessagePassing.sendToLeader(ServerMessage.quitMessage(client.getClientID(), client.getRoomID(), Server.getInstance().getServerID()));
         }else{
-            Leader.getInstance().removeClient(client.getClientID(), client.getRoomID());
+            Leader.getInstance().removeFromGlobalClientAndRoomList(client.getClientID(), Server.getInstance().getServerID(), client.getRoomID());
         }
 
         if(! clientSocket.isClosed()) clientSocket.close();

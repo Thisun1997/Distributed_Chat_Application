@@ -105,9 +105,13 @@ public class Leader {
         return roomIDList;
     }
 
-    public synchronized void removeClient(String clientID, String roomID){
-        globalClientList.get(this.getLeaderID()).remove(clientID);
-        globalRoomList.get(this.getLeaderID()).remove(Integer.parseInt(roomID));
+    public synchronized void removeFromGlobalClientAndRoomList(String clientID, String serverID, String roomID){
+        globalClientList.get(serverID).remove(clientID);
+        for(Room room: globalRoomList.get(serverID)){
+            if(Objects.equals(room.getRoomID(), roomID)){
+                room.removeClient(clientID);
+            }
+        }
 
     }
 }
