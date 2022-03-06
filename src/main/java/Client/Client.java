@@ -36,4 +36,8 @@ public class Client {
     public void setSocket(Socket socket) {
         this.socket = socket;
     }
+
+    public boolean isRoomOwner() {
+        return false;
+    }
 }

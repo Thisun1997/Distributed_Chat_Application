@@ -38,8 +38,8 @@ public class ServerThread implements Runnable{
 
         for( Object chatRoom : chatRoomsListJson ) {
             JSONObject j_room = (JSONObject)chatRoom;
-            roomList.add ( new Room(j_room.get("roomid").toString(),
-                    j_room.get("serverid").toString(), j_room.get("clientid").toString()) );
+            roomList.add ( new Room(j_room.get("roomID").toString(),
+                    j_room.get("serverID").toString(), j_room.get("clientID").toString()) );
         }
         Leader.getInstance().handleRequest(serverID,clientIDList,roomList);
     }
@@ -117,6 +117,14 @@ public class ServerThread implements Runnable{
                             clientThread.setTempRoomList(rooms);
                             clientThread.notifyAll();
                         }
+                    }
+                    else if(Objects.equals(type, "quit")){
+                        String clientID = jsonObject.get("clientID").toString();
+                        String formerRoomID = jsonObject.get("former").toString();
+                        String serverID = jsonObject.get("serverID").toString();
+                        // leader removes client from global room list
+                        Leader.getInstance().removeFromGlobalClientAndRoomList(clientID, serverID, formerRoomID);
+                        System.out.println("INFO : Client '" + clientID + "' deleted by leader");
                     }
                 }else {
                     System.out.println("WARN : Command error, Corrupted JSON from Server");

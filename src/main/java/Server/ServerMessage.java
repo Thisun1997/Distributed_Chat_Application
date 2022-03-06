@@ -69,9 +69,9 @@ public class ServerMessage {
         for( Room room : roomList ) {
             // {"clientid" : "Adel", "roomid" : "jokes", "serverid" : "s1"}
             JSONObject chatRoom = new JSONObject();
-            chatRoom.put( "clientid", room.getRoomID());
-            chatRoom.put( "roomid", room.getRoomID());
-            chatRoom.put( "serverid", room.getServerID() );
+            chatRoom.put( "clientID", room.getRoomID());
+            chatRoom.put( "roomID", room.getRoomID());
+            chatRoom.put( "serverID", room.getServerID() );
             chatRooms.add( chatRoom );
         }
 
@@ -123,6 +123,17 @@ public class ServerMessage {
         jsonObject.put("type", "listresponse");
         jsonObject.put("threadID", threadID);
         jsonObject.put("rooms", roomIDList);
+        return jsonObject;
+    }
+
+    //quit message
+    public static JSONObject quitMessage(String clientID, String formerRoomID, String serverID) {
+        // {"type" : "quit", "clientid" : "Adel"}
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "quit");
+        jsonObject.put("clientID", clientID);
+        jsonObject.put("former", formerRoomID);
+        jsonObject.put("serverID", serverID);
         return jsonObject;
     }
 }
