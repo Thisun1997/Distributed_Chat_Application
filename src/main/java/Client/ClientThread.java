@@ -192,8 +192,20 @@ public class ClientThread implements Runnable{
 //        TODO - implement delete room
     }
 
-    private void message(String content) {
+    private void message(String content) throws IOException {
 //        TODO - implement broadcasting the message to clients in the chatroom
+        String clientID = client.getClientID();
+        String roomID = client.getRoomID();
+
+        HashMap<String, Client> clientList = Server.getInstance().getRoomList().get(roomID).getClientList();
+
+        ArrayList<Socket> socketsList = new ArrayList<>();
+        for(String client: clientList.keySet()){
+            if (!clientList.get(client).getClientID().equals(clientID)) {
+                socketsList.add(clientList.get(client).getSocket());
+            }
+        }
+        MessagePassing.sendBroadcast(ClientMessage.broadcastMessage(clientID, content), socketsList);
     }
 
     private void quit() {
