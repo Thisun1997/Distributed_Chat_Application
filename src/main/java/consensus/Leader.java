@@ -2,6 +2,7 @@ package consensus;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -91,6 +92,7 @@ public class Leader {
         for(Room room: globalRoomList.get(serverID)){
             if(Objects.equals(room.getRoomID(), roomID)){
                 room.addClient(new Client(clientID, roomID, null));
+                break;
             }
         }
     }
@@ -110,10 +112,12 @@ public class Leader {
         for(Room room: globalRoomList.get(serverID)){
             if(Objects.equals(room.getRoomID(), roomID)){
                 room.removeClient(clientID);
+                break;
             }
         }
 
     }
+
 
     public boolean isRoomIDTaken(String roomID) {
         return getRoomIDList().contains(roomID);
@@ -134,4 +138,26 @@ public class Leader {
         }
 
     }
+
+    public void removeRoom(String serverID, String roomID, String mainHallRoomID, String ownerID) {
+        List<Room> rooms = globalRoomList.get(serverID);
+        HashMap<String, Client> formerClientList = null;
+        for(Room room:rooms){
+            if(Objects.equals(room.getRoomID(), roomID)){
+                formerClientList = room.getClientList();
+                break;
+            }
+        }
+        globalRoomList.get(serverID).removeIf(room -> Objects.equals(room.getRoomID(), roomID));
+        formerClientList.get(ownerID).setRoomOwner(false);
+        for(Room room:globalRoomList.get(serverID)) {
+            if (Objects.equals(room.getRoomID(), mainHallRoomID)) {
+                formerClientList.forEach((clientID, client) -> {
+                    client.setRoomID(mainHallRoomID);
+                    room.getClientList().put(clientID, client);
+                });
+            }
+        }
+    }
+
 }

@@ -199,11 +199,11 @@ public class ClientThread implements Runnable {
                 isRoomCreationApproved = roomIDTaken ? 0:1;
                 System.out.println("INFO : Room '" + roomid +
                         "' creation request from client " + client.getClientID() +
-                        " is" + (roomIDTaken ? " " : " not ") + "approved");
+                        " is" + (roomIDTaken ? "not" : " ") + "approved");
 
             }else{
                 try{
-                    MessagePassing.sendToLeader(ServerMessage.RoomCreateApprovalRequest(
+                    MessagePassing.sendToLeader(ServerMessage.roomCreateApprovalRequest(
                         client.getClientID(),
                         client.getRoomID(),
                         roomid, 
@@ -288,8 +288,59 @@ public class ClientThread implements Runnable {
         // TODO - implement joining a room in another server
     }
 
-    private void deleteRoom(String roomid) {
-        // TODO - implement delete room
+    private void deleteRoom(String roomID) throws IOException, InterruptedException {
+//        TODO - implement delete room
+        String mainHallID = Server.getInstance().getMainHallID(serverID);
+        boolean roomExists = Server.getInstance().getRoomList().containsKey(roomID);
+        if(roomExists){
+            //check sync
+            String serverID = Server.getInstance().getServerID();
+            Room room = Server.getInstance().getRoomList().get(roomID);
+            if(room.getOwnerClientID().equals(client.getClientID())){
+                while(!Server.getInstance().getLeaderUpdateComplete()) {
+                    Thread.sleep(1000);
+                }
+
+                if(Objects.equals(Leader.getInstance().getLeaderID(), Server.getInstance().getServerID())){
+                    Leader.getInstance().removeRoom(serverID, roomID, mainHallID, client.getClientID());
+                }else{
+                    //update leader server
+                    System.out.println(mainHallID);
+                    MessagePassing.sendToLeader(ServerMessage.deleteRoomRequest(serverID, client.getClientID(), roomID, mainHallID));
+                }
+                System.out.println("INFO : room [" + roomID + "] was deleted by : " + client.getClientID());
+
+
+                HashMap<String, Client> formerClients = Server.getInstance().getRoomList().get(roomID).getClientList();
+                HashMap<String, Client> mainHallClients = Server.getInstance().getRoomList().get(mainHallID).getClientList();
+
+                //add clients in deleted room to main hall
+                mainHallClients.putAll(formerClients);
+
+                ArrayList<Socket> socketList = new ArrayList<>();
+                for(String each_mainHallClient: mainHallClients.keySet()){
+                    socketList.add(mainHallClients.get(each_mainHallClient).getSocket());
+                }
+
+                Server.getInstance().getRoomList().remove(roomID);
+                client.setRoomOwner(false);
+
+                for(String each_formerClient: formerClients.keySet()){
+                    String clientID = formerClients.get(each_formerClient).getClientID();
+                    formerClients.get(each_formerClient).setRoomID(mainHallID);
+                    Server.getInstance().getRoomList().get(mainHallID).addClient(formerClients.get(each_formerClient));
+
+                    MessagePassing.sendBroadcast(ClientMessage.roomChangeReply(clientID, roomID, mainHallID), socketList);
+                }
+
+            }else{
+                MessagePassing.sendClient(ClientMessage.deleteRoomReply(roomID, "false"), clientSocket);
+                System.out.println("WARN : Requesting client [" + client.getClientID() + "] does not own the room ID [" + roomID + "]");
+            }
+        }else{
+            MessagePassing.sendClient(ClientMessage.deleteRoomReply(roomID, "false"), clientSocket);
+            System.out.println("WARN : Received room ID [" + roomID + "] does not exist");
+        }
     }
 
     private void message(String content) throws IOException {
@@ -311,7 +362,11 @@ public class ClientThread implements Runnable {
     private void quit() throws IOException {
         // TODO - Quiting the server
         if (client.isRoomOwner()) {
-            deleteRoom(client.getRoomID());
+            try {
+                deleteRoom(client.getRoomID());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             System.out.println("INFO : Deleted room before " + client.getClientID() + " quit");
         }
 
@@ -322,12 +377,8 @@ public class ClientThread implements Runnable {
         for (String each_client : formerClientList.keySet()) {
             socketList.add(formerClientList.get(each_client).getSocket());
         }
-
         MessagePassing.sendBroadcast(ClientMessage.roomChangeReply(client.getClientID(), client.getRoomID(), ""),
-                socketList);
-
-        // update local server
-        Server.getInstance().removeClient(client.getClientID(), client.getRoomID(), Thread.currentThread().getId());
+                    socketList);
 
         // update global list - Leader class
         // send quit message to leader if itself is not leader
@@ -336,11 +387,15 @@ public class ClientThread implements Runnable {
                     Server.getInstance().getServerID()));
         } else {
             Leader.getInstance().removeFromGlobalClientAndRoomList(client.getClientID(),
-                    Server.getInstance().getServerID(), client.getRoomID());
+                        Server.getInstance().getServerID(), client.getRoomID());
         }
 
-        if (!clientSocket.isClosed())
+        // update local server
+        Server.getInstance().removeClient(client.getClientID(), client.getRoomID(), Thread.currentThread().getId());
+
+        if (!clientSocket.isClosed()) {
             clientSocket.close();
+        }
         quit = true;
         System.out.println("INFO : " + client.getClientID() + " quit");
     }
