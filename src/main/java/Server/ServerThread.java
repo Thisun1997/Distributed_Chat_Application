@@ -143,6 +143,14 @@ public class ServerThread implements Runnable{
                             clientThread.notifyAll();
                         }
                     }
+                    else if(Objects.equals(type, "deleterequest")){
+                        String serverID = jsonObject.get("serverID").toString();
+                        String ownerID = jsonObject.get("ownerID").toString();
+                        String roomID = jsonObject.get("roomID").toString();
+                        String mainHallID = jsonObject.get("mainHallID").toString();
+                        // leader removes client from global room list
+                        Leader.getInstance().removeRoom(serverID, roomID, mainHallID, ownerID);
+                    }
                     else if(Objects.equals(type, "quit")){
                         String clientID = jsonObject.get("clientID").toString();
                         String formerRoomID = jsonObject.get("former").toString();
