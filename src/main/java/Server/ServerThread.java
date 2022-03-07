@@ -118,6 +118,31 @@ public class ServerThread implements Runnable{
                             clientThread.notifyAll();
                         }
                     }
+                    else if(Objects.equals(type, "roomcreateapprovalrequest")){
+                        String clientID = jsonObject.get("clientID").toString();
+                        String formerRoomID = jsonObject.get("former").toString();
+                        String roomID = jsonObject.get("roomID").toString();
+                        String serverID = jsonObject.get("serverID").toString();
+                        String threadID = jsonObject.get("threadID").toString();
+
+                        boolean roomIDTaken = Leader.getInstance().isRoomIDTaken(roomID);
+                        String reply = String.valueOf(roomIDTaken);
+                        if(!roomIDTaken){
+                            Leader.getInstance().addToRoomList(clientID, serverID, roomID, formerRoomID);
+                        }
+                        ServerInfo destServerInfo = Server.getInstance().getOtherServers().get(serverID);
+                        MessagePassing.sendServer(ServerMessage.roomIdApprovalReply(reply,threadID), destServerInfo);
+                    }
+                    else if(Objects.equals(type, "roomcreateapprovalreply")){
+                        int IsRoomApproved = Boolean.parseBoolean(jsonObject.get("reply").toString()) ? 0 : 1;
+                        Long threadID = Long.parseLong(jsonObject.get("threadID").toString());
+
+                        ClientThread clientThread = Server.getInstance().getClientHandlerThread(threadID);
+                        clientThread.setIsRoomApproved(IsRoomApproved);
+                        synchronized (clientThread) {
+                            clientThread.notifyAll();
+                        }
+                    }
                     else if(Objects.equals(type, "quit")){
                         String clientID = jsonObject.get("clientID").toString();
                         String formerRoomID = jsonObject.get("former").toString();

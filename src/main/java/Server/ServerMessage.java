@@ -137,6 +137,7 @@ public class ServerMessage {
         return jsonObject;
     }
 
+
     public static JSONObject getDeleteRoomRequest(String ownerID, String roomID, String mainHallID) {
         // {"type" : "deleterequest", "owner" : "Adel", "roomid" : "jokes", "mainhall" : "MainHall-s1" }
         JSONObject jsonObject = new JSONObject();
@@ -144,6 +145,26 @@ public class ServerMessage {
         jsonObject.put("owner", ownerID);
         jsonObject.put("roomid", roomID);
         jsonObject.put("mainhall", mainHallID);
+        return jsonObject;
+    }
+
+    public static JSONObject RoomCreateApprovalRequest(String clientID, String former, String roomID, String serverID, String threadID) {
+        // {"type" : "roomcreateapprovalrequest", "clientid" : "Adel", "roomid" : "jokes", "sender" : "s2", "threadid" : "10"}
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "roomcreateapprovalrequest");
+        jsonObject.put("clientID", clientID);
+        jsonObject.put("former", former);
+        jsonObject.put("roomID", roomID);
+        jsonObject.put("serverID", serverID);
+        jsonObject.put("threadID", threadID);
+        return jsonObject;
+    }
+
+    public static JSONObject roomIdApprovalReply(String reply, String threadID) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "roomcreateapprovalreply");
+        jsonObject.put("reply", reply);
+        jsonObject.put("threadID", threadID);
         return jsonObject;
     }
 }

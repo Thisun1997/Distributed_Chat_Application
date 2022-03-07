@@ -97,8 +97,8 @@ public class Leader {
 
     public synchronized List<String> getRoomIDList() {
         List<String> roomIDList = new ArrayList<>();
-        for(String serverID: Leader.getInstance().getGlobalRoomList().keySet()){
-            for(Room room: Leader.getInstance().getGlobalRoomList().get(serverID)){
+        for(String serverID: globalRoomList.keySet()){
+            for(Room room: globalRoomList.get(serverID)){
                 roomIDList.add(room.getRoomID());
             }
         }
@@ -115,6 +115,25 @@ public class Leader {
 
     }
 
-    public void removeRoom(String roomid, String mainHallRoomID, String clientID) {
+
+    public void removeRoom(String roomid, String mainHallRoomID, String clientID) {}
+    public boolean isRoomIDTaken(String roomID) {
+        return getRoomIDList().contains(roomID);
+    }
+
+    public void addToRoomList(String clientID, String serverID, String roomID, String former) {
+        Room newRoom = new Room(roomID, serverID, clientID);
+        globalRoomList.get(serverID).add(newRoom);
+        for(Room room: globalRoomList.get(serverID)){
+            if(Objects.equals(room.getRoomID(), former)){
+                room.removeClient(clientID);
+            }
+            else if(Objects.equals(room.getRoomID(), roomID)){
+                Client client = new Client(clientID, roomID, null);
+                client.setRoomOwner(true);
+                room.addClient(client);
+            }
+        }
+
     }
 }
