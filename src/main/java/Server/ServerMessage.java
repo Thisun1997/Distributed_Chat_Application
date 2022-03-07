@@ -136,4 +136,24 @@ public class ServerMessage {
         jsonObject.put("serverID", serverID);
         return jsonObject;
     }
+
+    public static JSONObject RoomCreateApprovalRequest(String clientID, String former, String roomID, String serverID, String threadID) {
+        // {"type" : "roomcreateapprovalrequest", "clientid" : "Adel", "roomid" : "jokes", "sender" : "s2", "threadid" : "10"}
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "roomcreateapprovalrequest");
+        jsonObject.put("clientID", clientID);
+        jsonObject.put("former", former);
+        jsonObject.put("roomID", roomID);
+        jsonObject.put("serverID", serverID);
+        jsonObject.put("threadID", threadID);
+        return jsonObject;
+    }
+
+    public static JSONObject roomIdApprovalReply(String reply, String threadID) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "roomcreateapprovalreply");
+        jsonObject.put("reply", reply);
+        jsonObject.put("threadID", threadID);
+        return jsonObject;
+    }
 }
