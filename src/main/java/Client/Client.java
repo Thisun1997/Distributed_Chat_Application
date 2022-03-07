@@ -6,6 +6,7 @@ public class Client {
     private String clientID;
     private String roomID;
     private Socket socket;
+    private boolean roomOwner;
 
     private boolean isRoomOwner = false;
 
@@ -13,6 +14,7 @@ public class Client {
         this.clientID = clientID;
         this.roomID = roomID;
         this.socket = socket;
+        this.roomOwner = false;
     }
 
     public String getClientID() {
@@ -48,4 +50,5 @@ public class Client {
     {
         isRoomOwner = roomOwner;
     }
+
 }

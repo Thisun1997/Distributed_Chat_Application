@@ -2,7 +2,9 @@ package consensus;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import Client.Client;
@@ -30,11 +32,11 @@ public class Leader {
         return leaderInstance;
     }
 
-    public String getLeaderID() {
+    public synchronized String getLeaderID() {
         return leaderID;
     }
 
-    public void setLeaderID(String leaderID) {
+    public synchronized void setLeaderID(String leaderID) {
         this.leaderID = leaderID;
     }
 
@@ -76,7 +78,7 @@ public class Leader {
         }
     }
 
-    public boolean isClientIDTaken(String identity){
+    public synchronized boolean isClientIDTaken(String identity){
         for(String clientID: globalClientList.keySet()){
             if(globalClientList.get(clientID).contains(identity)){
                 return true;
@@ -88,8 +90,9 @@ public class Leader {
     public synchronized void addToGlobalClientAndRoomList(String clientID, String serverID, String roomID){
         globalClientList.get(serverID).add(clientID);
         for(Room room: globalRoomList.get(serverID)){
-            if(room.getRoomID() == roomID){
+            if(Objects.equals(room.getRoomID(), roomID)){
                 room.addClient(new Client(clientID, roomID, null));
+                break;
             }
         }
     }
@@ -109,4 +112,68 @@ public class Leader {
         this.globalClientList.get(this.getLeaderID()).remove(clinet.getClientID());
         addToGlobalClientAndRoomList(clinet.getClientID(),this.getLeaderID(),formerRoomID);
     }
+
+    public synchronized List<String> getRoomIDList() {
+        List<String> roomIDList = new ArrayList<>();
+        for(String serverID: globalRoomList.keySet()){
+            for(Room room: globalRoomList.get(serverID)){
+                roomIDList.add(room.getRoomID());
+            }
+        }
+        return roomIDList;
+    }
+
+    public synchronized void removeFromGlobalClientAndRoomList(String clientID, String serverID, String roomID){
+        globalClientList.get(serverID).remove(clientID);
+        for(Room room: globalRoomList.get(serverID)){
+            if(Objects.equals(room.getRoomID(), roomID)){
+                room.removeClient(clientID);
+                break;
+            }
+        }
+
+    }
+
+
+    public boolean isRoomIDTaken(String roomID) {
+        return getRoomIDList().contains(roomID);
+    }
+
+    public void addToRoomList(String clientID, String serverID, String roomID, String former) {
+        Room newRoom = new Room(roomID, serverID, clientID);
+        globalRoomList.get(serverID).add(newRoom);
+        for(Room room: globalRoomList.get(serverID)){
+            if(Objects.equals(room.getRoomID(), former)){
+                room.removeClient(clientID);
+            }
+            else if(Objects.equals(room.getRoomID(), roomID)){
+                Client client = new Client(clientID, roomID, null);
+                client.setRoomOwner(true);
+                room.addClient(client);
+            }
+        }
+
+    }
+
+    public void removeRoom(String serverID, String roomID, String mainHallRoomID, String ownerID) {
+        List<Room> rooms = globalRoomList.get(serverID);
+        HashMap<String, Client> formerClientList = null;
+        for(Room room:rooms){
+            if(Objects.equals(room.getRoomID(), roomID)){
+                formerClientList = room.getClientList();
+                break;
+            }
+        }
+        globalRoomList.get(serverID).removeIf(room -> Objects.equals(room.getRoomID(), roomID));
+        formerClientList.get(ownerID).setRoomOwner(false);
+        for(Room room:globalRoomList.get(serverID)) {
+            if (Objects.equals(room.getRoomID(), mainHallRoomID)) {
+                formerClientList.forEach((clientID, client) -> {
+                    client.setRoomID(mainHallRoomID);
+                    room.getClientList().put(clientID, client);
+                });
+            }
+        }
+    }
+
 }
