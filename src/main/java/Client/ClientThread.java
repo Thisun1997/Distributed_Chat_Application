@@ -19,7 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.Lock;
 
 public class ClientThread implements Runnable {
     private final Socket clientSocket;
@@ -29,14 +28,11 @@ public class ClientThread implements Runnable {
     private int isRoomCreationApproved = -1;
     private boolean quit = false;
 
-    final Object lockObject;
-
     private List<String> tempRoomList;
 
     public ClientThread(Socket clientSocket) {
         this.clientSocket = clientSocket;
         this.serverID = Server.getInstance().getServerID();
-        this.lockObject = new Object();
     }
 
     public void setIsClientApproved(int isClientApproved) {
@@ -46,6 +42,8 @@ public class ClientThread implements Runnable {
     public void setTempRoomList(List<String> tempRoomList) {
         this.tempRoomList = tempRoomList;
     }
+
+    public void setIsRoomApproved(int isRoomApproved) { this.isRoomCreationApproved = isRoomApproved; }
 
     private void newIdentity(String identity) throws InterruptedException, IOException {
         // TODO - implement adding a new client
@@ -197,25 +195,26 @@ public class ClientThread implements Runnable {
             }
 
             if (Objects.equals(Leader.getInstance().getLeaderID(), Server.getInstance().getServerID())) {
-                boolean approved = Leader.getInstance().isRoomCreationApproved(roomid);
-                isRoomCreationApproved = approved ? 1:0;
+                boolean roomIDTaken = Leader.getInstance().isRoomIDTaken(roomid);
+                isRoomCreationApproved = roomIDTaken ? 0:1;
                 System.out.println("INFO : Room '" + roomid +
                         "' creation request from client " + client.getClientID() +
-                        " is" + (approved ? " " : " not ") + "approved");
+                        " is" + (roomIDTaken ? " " : " not ") + "approved");
 
             }else{
                 try{
-                    MessagePassing.sendToLeader(ServerMessage.getRoomCreateApprovalRequest(
-                        client.getClientID(), 
+                    MessagePassing.sendToLeader(ServerMessage.RoomCreateApprovalRequest(
+                        client.getClientID(),
+                        client.getRoomID(),
                         roomid, 
-                        String.valueOf(Server.getInstance().getServerID()), 
+                        Server.getInstance().getServerID(),
                         String.valueOf(Thread.currentThread().getId())));
                 }catch(Exception e){
                     e.printStackTrace();
                 }
-                synchronized(lockObject){
+                synchronized(this){
                     while(isRoomCreationApproved==-1){
-                        lockObject.wait(7000);
+                        this.wait(7000);
                     }
 
                 }
@@ -235,18 +234,19 @@ public class ClientThread implements Runnable {
                 //update server state
                 Server.getInstance().getRoomList().get(formerRoomID).removeClient(client.getClientID());
 
-                Room newRoom = new Room(client.getClientID(), roomid, Server.getInstance().getServerID());
+                Room newRoom = new Room(roomid, Server.getInstance().getServerID(), client.getClientID());
                 Server.getInstance().getRoomList().put(roomid, newRoom);
 
                 client.setRoomID(roomid);
-                // client.isRoomOwner();
+                client.setRoomOwner(true);
                 newRoom.addClient(client);
 
                 if (Objects.equals(Leader.getInstance().getLeaderID(), Server.getInstance().getServerID())) {
-                    Leader.getInstance().addToGlobalClientAndRoomList(
+                    Leader.getInstance().addToRoomList(
                         client.getClientID(),
                         Server.getInstance().getServerID(),
-                        roomid
+                        roomid,
+                        formerRoomID
                     );
                 }
 
@@ -254,29 +254,33 @@ public class ClientThread implements Runnable {
                     MessagePassing.sendClient(ClientMessage.createRoomReply(   
                         roomid,
                         "true"
-                    ), null);
+                    ), clientSocket);
 
                     MessagePassing.sendBroadcast(ClientMessage.roomChangeReply(
                         client.getClientID(),
-                        roomid,
-                        formerRoomID
+                        formerRoomID,
+                        roomid
                     ), formerSocket);
                 }
 
             }else if(isRoomCreationApproved==0){
                 System.out.println("WARN : Room id [" + roomid + "] already in use");
-                MessagePassing.sendClient(ClientMessage.createRoomReply(   
-                        roomid,
-                        "false"
-                    ), null);
+                synchronized (clientSocket) {
+                    MessagePassing.sendClient(ClientMessage.createRoomReply(
+                            roomid,
+                            "false"
+                    ), clientSocket);
+                }
             }
             isRoomCreationApproved = -1;
         }else{
             System.out.println("WARN : Received wrong room ID type or client already owns a room [" + roomid + "]");
-            MessagePassing.sendClient(ClientMessage.createRoomReply(   
+            synchronized (clientSocket) {
+                MessagePassing.sendClient(ClientMessage.createRoomReply(
                         roomid,
                         "false"
-                    ), null);
+                ), clientSocket);
+            }
         }
     }
 
