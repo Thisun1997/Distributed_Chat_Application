@@ -114,4 +114,8 @@ public class Leader {
         }
 
     }
+
+    public boolean isRoomCreationApproved(String roomid) {
+        return false;
+    }
 }
