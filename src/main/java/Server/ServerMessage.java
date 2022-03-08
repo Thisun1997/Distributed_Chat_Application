@@ -109,20 +109,20 @@ public class ServerMessage {
 
     // newly added
     @SuppressWarnings("unchecked")
-    public static JSONObject getJoinRoomRequest(String clientID, String roomID, String formerRoomID, String sender, String threadID, String isLocalRoomChange) {
+    public static JSONObject joinRoomRequest(String clientID, String formerServerID, String formerRoomID, String roomID, String threadID, String inServer) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("type", "joinroomapprovalrequest");
-        jsonObject.put("sender", sender);
-        jsonObject.put("roomid", roomID);
-        jsonObject.put("former", formerRoomID);
-        jsonObject.put("clientid", clientID);
-        jsonObject.put("threadid", threadID);
-        jsonObject.put("isLocalRoomChange", isLocalRoomChange);
+        jsonObject.put("formerServer", formerServerID);
+        jsonObject.put("formerRoom", formerRoomID);
+        jsonObject.put("roomID", roomID);
+        jsonObject.put("clientID", clientID);
+        jsonObject.put("threadID", threadID);
+        jsonObject.put("inServer", inServer);
         return jsonObject;
     }
 
     @SuppressWarnings("unchecked")
-    public static JSONObject getJoinRoomApprovalReply(String approved, String threadID, String host, String port) {
+    public static JSONObject joinRoomApprovalReply(String approved, String threadID, String host, String port) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("type", "joinroomapprovalreply");
         jsonObject.put("approved", approved);
@@ -190,6 +190,17 @@ public class ServerMessage {
         jsonObject.put("ownerID", ownerID);
         jsonObject.put("roomID", roomID);
         jsonObject.put("mainHallID", mainHallID);
+        return jsonObject;
+    }
+
+    public static JSONObject moveJoinRequest(String clientID, String roomID, String formerRoomID, String serverID, String threadID) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "movejoinrequest");
+        jsonObject.put("serverID", serverID);
+        jsonObject.put("roomID", roomID);
+        jsonObject.put("former", formerRoomID);
+        jsonObject.put("clientID", clientID);
+        jsonObject.put("threadID", threadID);
         return jsonObject;
     }
 }

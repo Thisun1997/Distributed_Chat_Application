@@ -65,7 +65,7 @@ public class ClientMessage {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("type", "serverchange");
         jsonObject.put("approved", approved);
-        jsonObject.put("serverID", serverID);
+        jsonObject.put("serverid", serverID);
         return jsonObject;
     }
 

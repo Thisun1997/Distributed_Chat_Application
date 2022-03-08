@@ -101,16 +101,18 @@ public class Leader {
     public String getServerIdIfRoomExist(String roomId){
         for(String serverId: globalRoomList.keySet()){
             List<Room> tempRoomList = globalRoomList.get(serverId);
-            if(tempRoomList.contains(roomId)){
-                return serverId;
+            for(Room room: tempRoomList){
+                if (Objects.equals(room.getRoomID(), roomId)){
+                    return serverId;
+                }
             }
         }
         return null;
     }
 
-    public void localJoinRoomClient(Client clinet, String formerRoomID) { // ----need to check----
-        this.globalClientList.get(this.getLeaderID()).remove(clinet.getClientID());
-        addToGlobalClientAndRoomList(clinet.getClientID(),this.getLeaderID(),formerRoomID);
+    public void InServerJoinRoomClient(String clientID, String serverID, String formerRoomID, String roomID) {
+        removeFromGlobalClientAndRoomList(clientID, serverID, formerRoomID);
+        addToGlobalClientAndRoomList(clientID, serverID, roomID);
     }
 
     public synchronized List<String> getRoomIDList() {

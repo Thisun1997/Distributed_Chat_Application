@@ -151,6 +151,81 @@ public class ServerThread implements Runnable{
                         // leader removes client from global room list
                         Leader.getInstance().removeRoom(serverID, roomID, mainHallID, ownerID);
                     }
+                    else if(Objects.equals(type, "joinroomapprovalrequest")){
+                        String formerServerID = jsonObject.get("formerServer").toString();
+                        String formerRoomID = jsonObject.get("formerRoom").toString();
+                        String roomID = jsonObject.get("roomID").toString();
+                        String clientID = jsonObject.get("clientID").toString();
+                        String threadID = jsonObject.get("threadID").toString();
+                        boolean inServer = Boolean.parseBoolean(jsonObject.get("inServer").toString());
+
+                        if(inServer){
+                            Leader.getInstance().InServerJoinRoomClient(clientID,formerServerID,formerRoomID,roomID);
+                        }
+                        else{
+                            String serverIDofTargetRoom = Leader.getInstance().getServerIdIfRoomExist(roomID);
+                            ServerInfo formerServerInfo = Server.getInstance().getOtherServers().get(formerServerID);
+                            try {
+                                boolean approved = serverIDofTargetRoom != null;
+                                ServerInfo serverInfo = null;
+                                String host = "";
+                                String port = "";
+                                if (approved) {
+                                    if (!Objects.equals(serverIDofTargetRoom, Server.getInstance().getServerID())) {
+                                        serverInfo = Server.getInstance().getOtherServers().get(serverIDofTargetRoom);
+                                    }
+                                    else{
+                                        serverInfo = Server.getInstance().getSelfServerInfo();
+                                    }
+                                    Leader.getInstance().removeFromGlobalClientAndRoomList(clientID, formerServerID, formerRoomID);//remove before route, later add on move join
+                                    host = serverInfo.getAddress();
+                                    port = serverInfo.getClientPort().toString();
+                                }
+
+                                MessagePassing.sendServer(
+                                        ServerMessage.joinRoomApprovalReply(
+                                                String.valueOf(approved),
+                                                threadID, host, port),
+                                        formerServerInfo
+                                );
+                                System.out.println("INFO : Join Room from [" + formerRoomID +
+                                        "] to [" + roomID + "] for client " + clientID +
+                                        " is" + (serverIDofTargetRoom != null ? " " : " not ") + "approved");
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }else if (Objects.equals(type, "joinroomapprovalreply")) {
+                        int approved = Boolean.parseBoolean(jsonObject.get("approved").toString()) ? 1 : 0;
+                        Long threadID = Long.parseLong(jsonObject.get("threadid").toString());
+                        String host = jsonObject.get("host").toString();
+                        String port = jsonObject.get("port").toString();
+
+                        ClientThread clientThread = Server.getInstance()
+                                .getClientHandlerThread(threadID);
+
+                        synchronized (clientThread) {
+                            clientThread.setIsJoinRoomApproved(approved);
+                            clientThread.setJoinRoomServerHostAddress(host);
+                            clientThread.setJoinRoomServerPort(port);
+                            clientThread.notifyAll();
+                        }
+
+                    }
+                    else if (Objects.equals(type, "movejoinrequest")) {
+                        //leader process move join acknowledgement from the target room server after change
+
+                        //parse params
+                        String clientID = jsonObject.get("clientID").toString();
+                        String roomID = jsonObject.get("roomID").toString();
+                        String serverID = jsonObject.get("serverID").toString();
+                        String threadID = jsonObject.get("threadID").toString();
+
+                        Leader.getInstance().addToGlobalClientAndRoomList(clientID, serverID, roomID);
+
+                        System.out.println("INFO : Moved Client [" + clientID + "] to server s" + serverID
+                                + " and room [" + roomID + "] is updated as current room");
+                    }
                     else if(Objects.equals(type, "quit")){
                         String clientID = jsonObject.get("clientID").toString();
                         String formerRoomID = jsonObject.get("former").toString();
