@@ -8,6 +8,8 @@ public class Client {
     private Socket socket;
     private boolean roomOwner;
 
+    private boolean isRoomOwner = false;
+
     public Client(String clientID, String roomID, Socket socket){
         this.clientID = clientID;
         this.roomID = roomID;
@@ -39,9 +41,14 @@ public class Client {
         this.socket = socket;
     }
 
-    public boolean isRoomOwner() {
-        return roomOwner;
+    public boolean isRoomOwner()
+    {
+        return isRoomOwner;
     }
 
-    public void setRoomOwner(boolean b) { roomOwner = b;}
+    public void setRoomOwner( boolean roomOwner )
+    {
+        isRoomOwner = roomOwner;
+    }
+
 }

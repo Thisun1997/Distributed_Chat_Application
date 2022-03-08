@@ -107,6 +107,31 @@ public class ServerMessage {
         return jsonObject;
     }
 
+    // newly added
+    @SuppressWarnings("unchecked")
+    public static JSONObject joinRoomRequest(String clientID, String formerServerID, String formerRoomID, String roomID, String threadID, String inServer) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "joinroomapprovalrequest");
+        jsonObject.put("formerServer", formerServerID);
+        jsonObject.put("formerRoom", formerRoomID);
+        jsonObject.put("roomID", roomID);
+        jsonObject.put("clientID", clientID);
+        jsonObject.put("threadID", threadID);
+        jsonObject.put("inServer", inServer);
+        return jsonObject;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static JSONObject joinRoomApprovalReply(String approved, String threadID, String host, String port) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "joinroomapprovalreply");
+        jsonObject.put("approved", approved);
+        jsonObject.put("host", host);
+        jsonObject.put("port", port);
+        jsonObject.put("threadid", threadID);
+        return jsonObject;
+    }
+
     public static JSONObject listRequest(String clientID, String threadID, String serverID){
         // {"type" : "listrequest", "clientid" : "Adel", "sender" : 1, "threadid" : 12 }
         JSONObject jsonObject = new JSONObject();
@@ -165,6 +190,17 @@ public class ServerMessage {
         jsonObject.put("ownerID", ownerID);
         jsonObject.put("roomID", roomID);
         jsonObject.put("mainHallID", mainHallID);
+        return jsonObject;
+    }
+
+    public static JSONObject moveJoinRequest(String clientID, String roomID, String formerRoomID, String serverID, String threadID) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "movejoinrequest");
+        jsonObject.put("serverID", serverID);
+        jsonObject.put("roomID", roomID);
+        jsonObject.put("former", formerRoomID);
+        jsonObject.put("clientID", clientID);
+        jsonObject.put("threadID", threadID);
         return jsonObject;
     }
 }

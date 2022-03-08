@@ -97,6 +97,24 @@ public class Leader {
         }
     }
 
+    // --------newly added
+    public String getServerIdIfRoomExist(String roomId){
+        for(String serverId: globalRoomList.keySet()){
+            List<Room> tempRoomList = globalRoomList.get(serverId);
+            for(Room room: tempRoomList){
+                if (Objects.equals(room.getRoomID(), roomId)){
+                    return serverId;
+                }
+            }
+        }
+        return null;
+    }
+
+    public void InServerJoinRoomClient(String clientID, String serverID, String formerRoomID, String roomID) {
+        removeFromGlobalClientAndRoomList(clientID, serverID, formerRoomID);
+        addToGlobalClientAndRoomList(clientID, serverID, roomID);
+    }
+
     public synchronized List<String> getRoomIDList() {
         List<String> roomIDList = new ArrayList<>();
         for(String serverID: globalRoomList.keySet()){
