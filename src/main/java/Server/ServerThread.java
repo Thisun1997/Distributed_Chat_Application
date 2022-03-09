@@ -70,7 +70,7 @@ public class ServerThread implements Runnable{
                         System.out.println("leader "+serverID+" update done..");
 //                        FastBullyAlgorithm FBA = new FastBullyAlgorithm("");
 //                        FBA.stopWaitingForUpdateCompleteMessage();
-                        Thread.sleep(500);
+//                        Thread.sleep(500);
                         Server.getInstance().setLeaderUpdateComplete(true);
                     }
                     else if(Objects.equals(type, "clientidapprovalrequest")){
@@ -239,7 +239,7 @@ public class ServerThread implements Runnable{
                 }
                 serverSocket.close();
             }
-        }catch (IOException | ParseException | InterruptedException e) {
+        }catch (IOException | ParseException e) {
             e.printStackTrace();
         }
     }

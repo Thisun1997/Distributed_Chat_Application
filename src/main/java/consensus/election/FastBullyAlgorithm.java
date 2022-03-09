@@ -72,6 +72,7 @@ public class FastBullyAlgorithm implements Runnable{
 
     public void replyAnswerForElectionMessage(){
         Server.getInstance().setOngoingElection(true);
+        Server.getInstance().setLeaderUpdateComplete(false);
         Leader.getInstance().reset();
 
         String initiatingServerID = jsonMessage.get("serverID").toString();
