@@ -655,7 +655,7 @@ public class ClientThread implements Runnable {
         } catch (IOException | ParseException | InterruptedException e) {
             // TODO - Add output string
             // e.printStackTrace();
-            System.out.println("quit exception!");
+            System.out.println("WARN : client abruptly disconnected");
         }
     }
 

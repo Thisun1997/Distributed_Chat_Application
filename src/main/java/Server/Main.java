@@ -145,7 +145,7 @@ public class Main {
     }
 
     private static void initiateCoordinator(Integer mode) {
-        System.out.println("leader election started");
+        System.out.println("INFO : leader election started");
         if (Server.getInstance().getOtherServers().isEmpty()){
             //self is the leader
         }

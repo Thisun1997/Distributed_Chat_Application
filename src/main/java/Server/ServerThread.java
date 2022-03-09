@@ -67,7 +67,7 @@ public class ServerThread implements Runnable{
                     }
                     else if(Objects.equals(type, "leaderstateupdatecomplete")){
                         String serverID = (String) jsonObject.get("serverID");
-                        System.out.println("leader "+serverID+" update done..");
+                        System.out.println("INFO : leader server "+serverID+" update done");
 //                        FastBullyAlgorithm FBA = new FastBullyAlgorithm("");
 //                        FBA.stopWaitingForUpdateCompleteMessage();
 //                        Thread.sleep(500);

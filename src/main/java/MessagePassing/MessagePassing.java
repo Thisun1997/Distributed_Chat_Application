@@ -78,7 +78,7 @@ public class MessagePassing
                 dataOutputStream.write((obj.toJSONString() + "\n").getBytes(StandardCharsets.UTF_8));
                 dataOutputStream.flush();
             } catch (IOException e) {
-                System.out.println("server "+each.getServerID()+" is down..");
+                System.out.println("WARN : server "+each.getServerID()+" is down");
             }
         }
     }
