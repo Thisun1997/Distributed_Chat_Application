@@ -1,6 +1,7 @@
 package Server;
 
 import Client.ClientThread;
+import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -223,6 +224,9 @@ public class Server {
     public void removeClient (String clientID, String formerRoom, Long threadID){
         this.roomList.get(formerRoom).removeClient(clientID);
         this.clientThreadList.remove(threadID);
+    }
+
+    public void setLogger(Logger logger) {
     }
 }
 
