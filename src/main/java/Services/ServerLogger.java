@@ -8,14 +8,13 @@ import java.io.IOException;
 
 public class ServerLogger {
     private static ServerLogger serverLogger;
-    private static Layout newLayout = new PatternLayout("%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n");
-    private static File logFile;
-    private static ConsoleAppender consoleAppender = new ConsoleAppender(newLayout);
+    private static final Layout newLayout = new PatternLayout("%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n");
+    private static final ConsoleAppender consoleAppender = new ConsoleAppender(newLayout);
     private static FileAppender fileAppender;
 
 
     private ServerLogger(String selfID){
-        logFile = new File("D:/sem8/Distributed Systems/Distributed_Chat_Application/Logs/"+selfID+".log");
+        File logFile = new File("D:/sem8/Distributed Systems/Distributed_Chat_Application/Logs/" + selfID + ".log");
         try {
             fileAppender = new FileAppender(newLayout, logFile.getAbsolutePath(), false);
         } catch (IOException e) {
