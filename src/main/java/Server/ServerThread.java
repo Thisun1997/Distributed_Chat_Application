@@ -4,8 +4,10 @@ import Client.ClientThread;
 import MessagePassing.MessagePassing;
 import consensus.GossipJob;
 import consensus.ConsensusJob;
+import Services.ServerLogger;
 import consensus.Leader;
 import consensus.election.FastBullyAlgorithm;
+import org.apache.log4j.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -22,7 +24,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class ServerThread implements Runnable{
-
+    private static Logger logger = ServerLogger.getLogger(Server.getInstance().getServerID(), ServerThread.class);
     private final ServerSocket serverSocket;
 //    private LeaderStateUpdate leaderStateUpdate = new LeaderStateUpdate();
 
@@ -65,11 +67,12 @@ public class ServerThread implements Runnable{
                         JSONArray clientIDListJson = ( JSONArray ) jsonObject.get( "clients" );
                         JSONArray chatRoomsListJson = ( JSONArray ) jsonObject.get( "chatrooms" );
                         //System.out.println(chatRoomsList);
+                        logger.info("information to update leader sent by "+serverID+" received");
                         sendToLeaderUpdate(serverID, clientIDListJson, chatRoomsListJson);
                     }
                     else if(Objects.equals(type, "leaderstateupdatecomplete")){
                         String serverID = (String) jsonObject.get("serverID");
-                        System.out.println("INFO : leader server "+serverID+" update done");
+                        logger.info("leader server "+serverID+" update done");
 //                        FastBullyAlgorithm FBA = new FastBullyAlgorithm("");
 //                        FBA.stopWaitingForUpdateCompleteMessage();
 //                        Thread.sleep(500);

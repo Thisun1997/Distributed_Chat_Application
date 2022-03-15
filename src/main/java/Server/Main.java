@@ -1,5 +1,7 @@
 package Server;
 
+import Services.ServerLogger;
+import org.apache.log4j.*;
 import Client.ClientThread;
 import consensus.GossipJob;
 import consensus.ConsensusJob;
@@ -21,9 +23,10 @@ public class Main {
 
     public static void main(String[] args) {
 
-
         String selfID = args[0];
         String mode = args[1];
+
+        Logger logger = ServerLogger.getLogger(selfID, Main.class);
 
         String configFile = "src/main/config/serverConfig.txt";
         File conf = new File(configFile); // read configuration
@@ -34,13 +37,14 @@ public class Main {
             e.printStackTrace();
         }
         Server server = Server.getInstance();
+        server.setLogger(logger);
         while (myReader.hasNextLine()) {
             String data = myReader.nextLine();
             String[] params = data.split(" ");
             server.addServer(selfID, params[0], params[1], Integer.parseInt(params[2]), Integer.parseInt(params[3]));
         }
 
-        System.out.println("LOG  : ------server started------");
+        logger.info("------server started------");
 
         try {
             // throw exception if invalid server id provided
@@ -61,7 +65,7 @@ public class Main {
             );
             serverCoordinationSocket.bind( endPointCoordination );
             System.out.println( serverCoordinationSocket.getLocalSocketAddress() );
-            System.out.println( "LOG  : TCP Server waiting for coordination on port " +
+            logger.info( "TCP Server waiting for coordination on port " +
                     serverCoordinationSocket.getLocalPort() ); // port open for coordination
 
             /**
@@ -77,7 +81,7 @@ public class Main {
             );
             serverClientsSocket.bind(endPointClient);
             System.out.println(serverClientsSocket.getLocalSocketAddress());
-            System.out.println("LOG  : TCP Server waiting for clients on port "+
+            logger.info("TCP Server waiting for clients on port "+
                     serverClientsSocket.getLocalPort()); // port open for clients
 
             /**
@@ -103,7 +107,8 @@ public class Main {
             Server.getInstance().setElectionNominationTimeout(30L);
             Server.getInstance().setConsensusVoteDuration(5L);
             Server.getInstance().setAliveFactor("5");
-            initiateCoordinator(Integer.parseInt(mode));
+            initiateCoordinator(logger, Integer.parseInt(mode));
+
 
 
 //            Runnable heartbeat = new BullyAlgorithm("Heartbeat");
@@ -137,22 +142,22 @@ public class Main {
             }
         }
         catch( IllegalArgumentException e ) {
-            System.out.println("ERROR : invalid server ID");
+            logger.error("invalid server ID");
         }
         catch ( IndexOutOfBoundsException e) {
-            System.out.println("ERROR : server arguments not provided");
-            e.printStackTrace();
+            logger.error("ERROR : server arguments not provided");
+            logger.trace(e.getMessage());
         }
         catch ( IOException e) {
-            System.out.println("ERROR : occurred in main " + Arrays.toString(e.getStackTrace()));
+            logger.error("occurred in main " + Arrays.toString(e.getStackTrace()));
         }
         catch (InterruptedException e) {
-            e.printStackTrace();
+            logger.trace(e.getMessage());
         }
     }
 
-    private static void initiateCoordinator(Integer mode) {
-        System.out.println("INFO : leader election started");
+    private static void initiateCoordinator(Logger logger, Integer mode) {
+        logger.info("leader election started");
         if (Server.getInstance().getOtherServers().isEmpty()){
             //self is the leader
         }

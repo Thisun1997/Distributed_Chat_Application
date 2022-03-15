@@ -1,6 +1,7 @@
 package Server;
 
 import Client.ClientThread;
+import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -269,6 +270,8 @@ public class Server {
         this.aliveFactor =aliveFactor;
     }
 
+    public void setLogger(Logger logger) {
+    }
 
 }
 
