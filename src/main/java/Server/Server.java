@@ -19,16 +19,24 @@ public class Server {
     private final ConcurrentHashMap<String, ServerInfo> otherServers = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, ServerInfo> candidateServers = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, ServerInfo> lowPriorityServers = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Integer> voteList = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Integer> suspectList = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Integer> heartBeatCountList = new ConcurrentHashMap<>();
+
     private ConcurrentHashMap<String, ServerInfo> tempCandidateServers = new ConcurrentHashMap<>();
 
     private AtomicBoolean ongoingElection = new AtomicBoolean(false);;
     private AtomicBoolean answerMessageReceived = new AtomicBoolean(false);;
     private AtomicBoolean viewMessageReceived = new AtomicBoolean(false);;
     private AtomicBoolean leaderUpdateComplete = new AtomicBoolean(false);
+    private AtomicBoolean ongoingConsensus = new AtomicBoolean(false);;
+
     private Long electionAnswerTimeout;
     private Long electionCoordinatorTimeout;
-
     private Long electionNominationTimeout;
+    private Long consensusVoteDuration;
+
+    private String aliveFactor;
 
     private static Server serverInstance;
 
@@ -183,6 +191,14 @@ public class Server {
         this.viewMessageReceived.set(viewMessageReceived);
     }
 
+    public boolean getOngoingConsensus() {
+        return ongoingConsensus.get();
+    }
+
+    public void setOngoingConsensus(boolean ongoingConsensus) {
+        this.ongoingConsensus.set(ongoingConsensus);
+    }
+
     public Long getElectionAnswerTimeout() {
         return electionAnswerTimeout;
     }
@@ -207,6 +223,14 @@ public class Server {
         this.electionNominationTimeout = electionNominationTimeout*(getOtherServers().size()+1-getLowPriorityServers().size());
     }
 
+    public Long getConsensusVoteDuration() {
+        return consensusVoteDuration;
+    }
+
+    public void setConsensusVoteDuration(Long consensusVoteDuration) {
+        this.consensusVoteDuration = consensusVoteDuration;
+    }
+
     public void setLeaderUpdateComplete(boolean updateComplete) {
         this.leaderUpdateComplete.set(updateComplete);
     }
@@ -224,5 +248,27 @@ public class Server {
         this.roomList.get(formerRoom).removeClient(clientID);
         this.clientThreadList.remove(threadID);
     }
+
+    public synchronized ConcurrentHashMap<String, Integer> getVoteList() {
+        return voteList;
+    }
+
+    public synchronized ConcurrentHashMap<String, Integer> getSuspectList() {
+        return suspectList;
+    }
+
+    public synchronized ConcurrentHashMap<String, Integer> getHeartBeatCountList() {
+        return heartBeatCountList;
+    }
+
+    public String getAliveFactor() {
+        return aliveFactor;
+    }
+
+    public void setAliveFactor(String aliveFactor){
+        this.aliveFactor =aliveFactor;
+    }
+
+
 }
 

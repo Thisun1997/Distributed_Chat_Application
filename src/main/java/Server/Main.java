@@ -1,8 +1,11 @@
 package Server;
 
 import Client.ClientThread;
-import consensus.Leader;
+import consensus.GossipJob;
+import consensus.ConsensusJob;
 import consensus.election.FastBullyAlgorithm;
+import org.quartz.*;
+import Services.Quartz;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -98,6 +101,8 @@ public class Main {
             Server.getInstance().setElectionCoordinatorTimeout(10L);
             // T4
             Server.getInstance().setElectionNominationTimeout(30L);
+            Server.getInstance().setConsensusVoteDuration(5L);
+            Server.getInstance().setAliveFactor("5");
             initiateCoordinator(Integer.parseInt(mode));
 
 
@@ -116,6 +121,8 @@ public class Main {
 //                startConsensus();
 //            }
 
+          startGossip();
+          startConsensus();
 
             /**
              Handle clients
@@ -150,16 +157,66 @@ public class Main {
             //self is the leader
         }
         else{
-            if(mode == 1){
-                FastBullyAlgorithm IamUp_FBA = new FastBullyAlgorithm("IamUp");
-                new Thread(IamUp_FBA).start();
-            }
-//            IamUp_FBA.sendIamUpMessage();
-            else if(mode == 2){
-                if (Integer.parseInt(Server.getInstance().getSelfServerInfo().getServerID()) == 1){
-                    FastBullyAlgorithm.initialize();
-                }
-            }
+            FastBullyAlgorithm IamUp_FBA = new FastBullyAlgorithm("IamUp");
+            new Thread(IamUp_FBA).start();
+//            if(mode == 1){
+//                FastBullyAlgorithm IamUp_FBA = new FastBullyAlgorithm("IamUp");
+//                new Thread(IamUp_FBA).start();
+//            }
+////            IamUp_FBA.sendIamUpMessage();
+//            else if(mode == 2){
+//                if (Integer.parseInt(Server.getInstance().getSelfServerInfo().getServerID()) == 3){
+//                    FastBullyAlgorithm.initialize();
+//                }
+//            }
+        }
+    }
+
+    private static void startGossip() {
+        try {
+
+            JobDetail gossipJob = JobBuilder.newJob(GossipJob.class)
+                    .withIdentity("GOSSIPJOB", "group1").build();
+
+            Trigger gossipTrigger = TriggerBuilder
+                    .newTrigger()
+                    .withIdentity("GOSSIPJOBTRIGGER", "group1")
+                    .withSchedule(
+                            SimpleScheduleBuilder.simpleSchedule()
+                                    .withIntervalInSeconds(3).repeatForever())
+                    .build();
+
+            Scheduler scheduler = Quartz.getInstance().getScheduler();
+            scheduler.start();
+            scheduler.scheduleJob(gossipJob, gossipTrigger);
+
+        } catch (SchedulerException e) {
+            System.out.println("ERROR : Error in starting gossiping");
+        }
+    }
+
+    private static void startConsensus() {
+        try {
+
+            JobDetail consensusJob = JobBuilder.newJob(ConsensusJob.class)
+                    .withIdentity("CONSENSUSJOB", "group1").build();
+
+//            consensusJob.getJobDataMap().put("consensusVoteDuration", consensus_vote_duration);
+
+            Trigger consensusTrigger = TriggerBuilder
+                    .newTrigger()
+                    .withIdentity("CONSENSUSJOBTRIGGER", "group1")
+                    .withSchedule(
+                            SimpleScheduleBuilder.simpleSchedule()
+                                    .withIntervalInSeconds(10).repeatForever())
+                    .build();
+
+            Scheduler scheduler = Quartz.getInstance().getScheduler();
+            scheduler.start();
+            scheduler.scheduleJob(consensusJob, consensusTrigger);
+
+        } catch (SchedulerException e) {
+            System.out.println("ERROR : Error in starting consensus");
         }
     }
 

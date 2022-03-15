@@ -3,6 +3,7 @@ package Server;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import java.util.HashMap;
 import java.util.List;
 
 public class ServerMessage {
@@ -201,6 +202,44 @@ public class ServerMessage {
         jsonObject.put("former", formerRoomID);
         jsonObject.put("clientID", clientID);
         jsonObject.put("threadID", threadID);
+        return jsonObject;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static JSONObject voteMessage(String serverID, String suspectServerID) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "vote");
+        jsonObject.put("serverID", serverID);
+        jsonObject.put("suspectServerID", suspectServerID);
+        return jsonObject;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static JSONObject notifyServerDownMessage(String serverID) {
+        // {"type":"notifyserverdown", "serverid":"s2"}
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "notifyserverdown");
+        jsonObject.put("serverID", serverID);
+        return jsonObject;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static JSONObject answerVoteMessage(String suspectServerID, String vote, String votedBy){
+        // {"type":"answervote","suspectserverid":"1","vote":"YES", "votedby":"1"}
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "answervote");
+        jsonObject.put("suspectServerID", suspectServerID);
+        jsonObject.put("votedBy", votedBy);
+        jsonObject.put("vote", vote);
+        return jsonObject;
+    }
+
+
+    public static JSONObject sendGossip(String serverID, HashMap<String, Integer> heartbeatCountList) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "gossip");
+        jsonObject.put("serverID", serverID);
+        jsonObject.put("heartbeatCountList", heartbeatCountList);
         return jsonObject;
     }
 }

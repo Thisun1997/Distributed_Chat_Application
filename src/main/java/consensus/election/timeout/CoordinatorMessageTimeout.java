@@ -21,6 +21,7 @@ public class CoordinatorMessageTimeout extends MessageTimeout {
                     nominationFBA = new FastBullyAlgorithm("sendNominationCoordinatorTimeout", jobExecutionContext);
                 }
                 else{
+//                    System.out.println("INFO : CoordinatorMessageTimeout");
                     nominationFBA = new FastBullyAlgorithm("restart_election");
                 }
                 new Thread(nominationFBA).start();
