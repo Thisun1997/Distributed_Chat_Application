@@ -14,6 +14,7 @@ public class NominationMessageTimeout extends MessageTimeout {
         if(Server.getInstance().getOngoingElection()){
             if (!interrupted.get()) {
                 // If nomination message not received, restart the election procedure
+//                System.out.println("INFO : NominationMessageTimeout");
                 FastBullyAlgorithm startFBA = new FastBullyAlgorithm("restart_election");
                 new Thread(startFBA).start();
             }

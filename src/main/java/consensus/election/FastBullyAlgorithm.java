@@ -47,6 +47,7 @@ public class FastBullyAlgorithm implements Runnable{
         Server.getInstance().setAnswerMessageReceived(false);
         Server.getInstance().setOngoingElection(true);
         Server.getInstance().setLeaderUpdateComplete(false);
+        Leader.getInstance().setLeaderID(null);
         Leader.getInstance().reset();
 
         initiatingServerInfo = Server.getInstance().getSelfServerInfo();
@@ -75,6 +76,7 @@ public class FastBullyAlgorithm implements Runnable{
     public void replyAnswerForElectionMessage(){
         Server.getInstance().setOngoingElection(true);
         Server.getInstance().setLeaderUpdateComplete(false);
+        Leader.getInstance().setLeaderID(null);
         Leader.getInstance().reset();
 
         String initiatingServerID = jsonMessage.get("serverID").toString();
@@ -278,7 +280,7 @@ public class FastBullyAlgorithm implements Runnable{
                                 .withIdentity(Constant.ELECTION_TRIGGER, groupId)
                                 .startAt(DateBuilder.futureDate(Math.toIntExact(timeout), DateBuilder.IntervalUnit.SECOND))
                                 .build();
-                scheduler.start();
+//                scheduler.start();
                 scheduler.scheduleJob(jobDetail, simpleTrigger);
             }
 
@@ -355,6 +357,9 @@ public class FastBullyAlgorithm implements Runnable{
         iAmUpSender = new ServerInfo(senderServerID, senderAddress, senderServerPort, senderClientPort);
 
         Server.getInstance().addTempCandidateServer(iAmUpSender);
+        if (!Server.getInstance().getOtherServers().containsKey(senderServerID)){
+            Server.getInstance().getOtherServers().put(senderServerID, iAmUpSender);
+        }
         if(Leader.getInstance().getLeaderID() == null){
             try {
                 MessagePassing.sendServer(ServerMessage.viewMessage(senderServerID, senderAddress, senderServerPort, senderClientPort), iAmUpSender);
@@ -422,17 +427,17 @@ public class FastBullyAlgorithm implements Runnable{
         Server.getInstance().setViewMessageReceived(true);
         Server.getInstance().setLeaderUpdateComplete(false);
         String leaderServerID = jsonMessage.get("serverID").toString();
-        Integer leadercheck = 0;
-        if(Leader.getInstance().getLeaderID() != null){
-            leadercheck = Integer.parseInt(Leader.getInstance().getLeaderID());
-        }
-        if(Integer.parseInt(leaderServerID) >= leadercheck){
-            String leaderAddress = jsonMessage.get("address").toString();
-            Integer leaderServerPort = Integer.parseInt( jsonMessage.get("serverPort").toString());
-            Integer leaderClientPort = Integer.parseInt( jsonMessage.get("clientPort").toString());
-            leader = new ServerInfo(leaderServerID, leaderAddress, leaderServerPort, leaderClientPort);
-            acceptNewLeader(leaderServerID);
-        }
+//        Integer leadercheck = 0;
+//        if(Leader.getInstance().getLeaderID() != null){
+//            leadercheck = Integer.parseInt(Leader.getInstance().getLeaderID());
+//        }
+//        if(Integer.parseInt(leaderServerID) >= leadercheck){
+        String leaderAddress = jsonMessage.get("address").toString();
+        Integer leaderServerPort = Integer.parseInt( jsonMessage.get("serverPort").toString());
+        Integer leaderClientPort = Integer.parseInt( jsonMessage.get("clientPort").toString());
+        leader = new ServerInfo(leaderServerID, leaderAddress, leaderServerPort, leaderClientPort);
+        acceptNewLeader(leaderServerID);
+//        }
     }
 
     @Override
@@ -514,8 +519,10 @@ public class FastBullyAlgorithm implements Runnable{
     }
 
     public static void initialize(){
-        FastBullyAlgorithm startFBA = new FastBullyAlgorithm("start_election");
-        new Thread(startFBA).start();
+        if(!Server.getInstance().getOngoingElection()) {
+            FastBullyAlgorithm startFBA = new FastBullyAlgorithm("start_election");
+            new Thread(startFBA).start();
+        }
 //        startFBA.startElection();
     }
 }
