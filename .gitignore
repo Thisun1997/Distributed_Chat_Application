@@ -1,5 +1,5 @@
-# Default ignored files
-/shelf/
-/workspace.xml
-/.idea/
+/.idea
+/Logs
 /target
+/src/main/resources/Logs/client.log
+/src/main/resources/Logs/coordination.log

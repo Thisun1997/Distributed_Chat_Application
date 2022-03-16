@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="info">
+    <Appenders>
+        <Console name="LogToConsole" target="SYSTEM_OUT">
+            <PatternLayout>
+                <Pattern>%d{yyyy-MM-dd HH:mm:ss} [%t] [%-5level] - %msg%n</Pattern>
+            </PatternLayout>
+        </Console>
+        <File name="LogToFileClient" fileName="Logs/client.log">
+            <PatternLayout>
+                <Pattern>%d{yyyy-MM-dd HH:mm:ss} [%t] [%-5level] - %msg%n</Pattern>
+            </PatternLayout>
+        </File>
+        <File name="LogToFileCoordination" fileName="Logs/coordination.log">
+            <PatternLayout>
+                <Pattern>%d{yyyy-MM-dd HH:mm:ss} [%t] [%-5level] - %msg%n</Pattern>
+            </PatternLayout>
+        </File>
+    </Appenders>
+    <Loggers>
+        <Root level="error">
+            <AppenderRef ref="LogToConsole"/>
+        </Root>
+        <Logger name="Services.Log4jLogger" level="info" >
+            <AppenderRef ref="LogToFileClient"/>
+        </Logger>
+        <Logger name="Services.Log4jLogger" level="trace" >
+            <AppenderRef ref="LogToFileCoordination"/>
+        </Logger>
+    </Loggers>
+</Configuration>
