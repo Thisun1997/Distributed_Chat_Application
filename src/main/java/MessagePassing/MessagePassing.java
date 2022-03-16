@@ -1,7 +1,9 @@
 package MessagePassing;
 
 //import consensus.LeaderState;
+import Services.ServerLogger;
 import consensus.Leader;
+import org.apache.log4j.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -17,6 +19,7 @@ import java.util.ArrayList;
 
 public class MessagePassing
 {
+    private static Logger logger = ServerLogger.getLogger(Server.getInstance().getServerID(), MessagePassing.class);
     public static JSONObject convertToJson(String jsonString)
     {
         JSONObject j_object = null;
@@ -78,7 +81,7 @@ public class MessagePassing
                 dataOutputStream.write((obj.toJSONString() + "\n").getBytes(StandardCharsets.UTF_8));
                 dataOutputStream.flush();
             } catch (IOException e) {
-                System.out.println("WARN : server "+each.getServerID()+" is down");
+                logger.warn("WARN : server "+each.getServerID()+" is down");
             }
         }
     }

@@ -90,6 +90,7 @@ public class ServerThread implements Runnable{
                         }
                         ServerInfo destServerInfo = Server.getInstance().getOtherServers().get(serverID);
                         MessagePassing.sendServer(ServerMessage.clientIdApprovalReply(reply,threadID), destServerInfo);
+                        logger.info("Client "+clientID+ (!clientIDTaken ? " " : " not ") + "approved by the leader "+Server.getInstance().getServerID());
                     }
                     else if(Objects.equals(type, "clientidapprovalreply")){
                         int IsClientApproved = Boolean.parseBoolean(jsonObject.get("reply").toString()) ? 0 : 1;
@@ -137,6 +138,9 @@ public class ServerThread implements Runnable{
                         }
                         ServerInfo destServerInfo = Server.getInstance().getOtherServers().get(serverID);
                         MessagePassing.sendServer(ServerMessage.roomIdApprovalReply(reply,threadID), destServerInfo);
+                        logger.info("Room " + roomID +
+                                " creation request from client " + clientID+
+                                " is" + (roomIDTaken ? "not" : " ") + "approved");
                     }
                     else if(Objects.equals(type, "roomcreateapprovalreply")){
                         int IsRoomApproved = Boolean.parseBoolean(jsonObject.get("reply").toString()) ? 0 : 1;
@@ -193,8 +197,8 @@ public class ServerThread implements Runnable{
                                                 threadID, host, port),
                                         formerServerInfo
                                 );
-                                System.out.println("INFO : Join Room from [" + formerRoomID +
-                                        "] to [" + roomID + "] for client " + clientID +
+                                logger.info("Join Room from " + formerRoomID +
+                                        " to " + roomID + "for client " + clientID +
                                         " is" + (serverIDofTargetRoom != null ? " " : " not ") + "approved");
                             } catch (Exception e) {
                                 e.printStackTrace();
@@ -228,8 +232,8 @@ public class ServerThread implements Runnable{
 
                         Leader.getInstance().addToGlobalClientAndRoomList(clientID, serverID, roomID);
 
-                        System.out.println("INFO : Moved Client [" + clientID + "] to server s" + serverID
-                                + " and room [" + roomID + "] is updated as current room");
+                        logger.info("Moved Client " + clientID + " to server " + serverID
+                                + " and room " + roomID + " is updated as current room");
                     }
                     else if(Objects.equals(type, "quit")){
                         String clientID = jsonObject.get("clientID").toString();
@@ -237,7 +241,7 @@ public class ServerThread implements Runnable{
                         String serverID = jsonObject.get("serverID").toString();
                         // leader removes client from global room list
                         Leader.getInstance().removeFromGlobalClientAndRoomList(clientID, serverID, formerRoomID);
-                        System.out.println("INFO : Client '" + clientID + "' deleted by leader");
+                        logger.info("Client '" + clientID + "' deleted by leader");
                     }
                     else if(Objects.equals(type, "vote")){
                         ConsensusJob.startVoteMessageHandler(jsonObject);
@@ -252,7 +256,7 @@ public class ServerThread implements Runnable{
                         GossipJob.gossipHandler(jsonObject);
                     }
                 }else {
-                    System.out.println("WARN : Command error, Corrupted JSON from Server");
+                    logger.warn("Command error, Corrupted JSON from Server");
                 }
                 serverSocket.close();
             }
