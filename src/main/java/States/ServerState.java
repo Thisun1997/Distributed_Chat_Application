@@ -89,6 +89,10 @@ public class ServerState {
         return instance;
     }
 
+    public Hashtable<String, ArrayList<String>> getTempCandidateList() {
+        return tempRoomList;
+    }
+
     public void setAlive(Channel channel,boolean isAlive) {
         if(isAlive){
            alive.add(channel);

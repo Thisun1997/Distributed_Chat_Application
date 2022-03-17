@@ -4,10 +4,13 @@ import Core.Member;
 import Core.Room;
 import Protocols.Client;
 import Protocols.ClientServer;
+import Services.ServerLogger;
 import States.LeaderState;
 import States.ServerState;
 import io.netty.channel.Channel;
 import io.netty.channel.group.ChannelGroup;
+import org.apache.log4j.Logger;
+
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -15,6 +18,7 @@ import java.util.concurrent.Executors;
 public class DeleteRoomMessage extends ClientMessage{
 
     private  String roomid;
+    private static Logger logger = ServerLogger.getLogger(ServerState.getInstance().getServerId(), DeleteRoomMessage.class);
 
     DeleteRoomMessage(String roomId){
         this.roomid=roomId;
@@ -58,7 +62,7 @@ public class DeleteRoomMessage extends ClientMessage{
                     //update leader server
                     Client.send(LeaderState.getInstance().getLeaderID(), new DeleteRoomRequestMessage(serverId, clientId, roomid, mainHallId),true);
                 }
-                System.out.println("INFO : room [" + roomid + "] was deleted by : " + clientId);
+                logger.info("Room " + roomid + " was deleted by : " + clientId);
 
 
                 ArrayList<String> formerClients = ServerState.getInstance().getRoom(roomid).getMembers();
@@ -67,24 +71,32 @@ public class DeleteRoomMessage extends ClientMessage{
                 ChannelGroup mainHallChannels = ServerState.getInstance().getRoom(mainHallId).getMemberGroup();
 
                 //add clients in deleted room to main hall
-                mainHallClients.addAll(formerClients);
+//                mainHallClients.addAll(formerClients);
                 mainHallChannels.addAll(formerChannels);
 
+                for (String c:formerClients){
+                    if(!mainHallClients.contains(c)){
+                        mainHallClients.add(c);
+                    }
+                }
+
+
                 ServerState.getInstance().getRooms().remove(roomid);
+                ServerState.getInstance().getMember(clientId).setIsRoomOwner(false);
                 for(String formerClient: formerClients){
                     Member member=ServerState.getInstance().getMember(formerClient);
                     member.setRoom(mainHallId);
 
-                    ClientServer.broadcast(mainHallChannels,new RoomChangeReplyMessage(clientId, roomid, mainHallId));
+                    ClientServer.broadcast(mainHallChannels,new RoomChangeReplyMessage(formerClient, roomid, mainHallId));
                 }
                 ClientServer.send(channel,new DeleteRoomReplyMessage(roomid,true));
             }else{
                 ClientServer.send(channel,new DeleteRoomReplyMessage(roomid,false));
-                System.out.println("WARN : Requesting client [" + clientId + "] does not own the room ID [" + roomid + "]");
+                logger.warn("Requesting client " + clientId + " does not own the room " + roomid);
             }
         }else{
             ClientServer.send(channel,new DeleteRoomReplyMessage(roomid,false));
-            System.out.println("WARN : Received room ID [" + roomid + "] does not exist");
+            logger.warn("Received room " + roomid + " does not exist");
         }
     }
 

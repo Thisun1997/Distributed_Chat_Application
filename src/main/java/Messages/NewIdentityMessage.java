@@ -3,10 +3,13 @@ package Messages;
 import Core.Member;
 import Protocols.Client;
 import Protocols.ClientServer;
+import Protocols.Server;
+import Services.ServerLogger;
 import States.LeaderState;
 import States.ServerState;
 import io.netty.channel.Channel;
 import io.netty.channel.group.ChannelGroup;
+import org.apache.log4j.Logger;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -14,6 +17,7 @@ import java.util.concurrent.Executors;
 public class NewIdentityMessage extends ClientMessage{
 
     private String identity;
+    private static Logger logger = ServerLogger.getLogger(ServerState.getInstance().getServerId(),NewIdentityMessage.class);
 
     public NewIdentityMessage(String identity)  {
         this.identity=identity;
@@ -48,9 +52,11 @@ public class NewIdentityMessage extends ClientMessage{
              if (ServerState.getInstance().getServerId().equals(LeaderState.getInstance().getLeaderID())) {
                  boolean clientIDTaken = LeaderState.getInstance().isClientIDTaken(identity);
                  isClientApproved = clientIDTaken ? 0 : 1;
+                 logger.info("Client "+identity+ (isClientApproved == 1 ? " " : " not ") + "approved by the leader "+ServerState.getInstance().getServerId());
              } else {
                  Client.send(LeaderState.getInstance().getLeaderID(), new ClientIdApprovalRequestMessage(identity, ServerState.getInstance().getServerId(), channel.id().asShortText()), false);
                  isClientApproved = ServerState.getInstance().getClientIdApproved(channel.id().asShortText());
+                 logger.info("Client "+identity+ " approval request sent to the leader "+LeaderState.getInstance().getLeaderID());
              }
 
              // if client is approved
@@ -72,17 +78,20 @@ public class NewIdentityMessage extends ClientMessage{
                  ClientServer.send(channel,new NewIdentityReplyMessage(true));
                  ClientServer.broadcast(ServerState.getInstance().getRoom(mainHallID).getMemberGroup(),new RoomChangeReplyMessage(identity,"",mainHallID));
                  ServerState.getInstance().removeClientIdApproved(channel.id().asShortText());
+                 logger.info("Client "+identity+" successfully joined the server "+ServerState.getInstance().getServerId()+" room "+mainHallID);
              }
              else if (isClientApproved == 0) {
                  ClientServer.send(channel,new NewIdentityReplyMessage(false));
                  ServerState.getInstance().removeClientIdApproved(channel.id().asShortText());
+                 logger.warn("Client "+identity+" already in use");
             }
              else {
-                 System.out.println("server communication fail");
+                 logger.warn("Server communication with leader " + LeaderState.getInstance().getLeaderID() +" fail");
              }
          }
          else {
              ClientServer.send(channel,new NewIdentityReplyMessage(false));
+             logger.warn("Client "+identity+" is incorrect");
          }
      }
     public boolean validate(){

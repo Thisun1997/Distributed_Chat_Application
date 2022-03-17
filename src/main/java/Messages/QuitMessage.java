@@ -2,13 +2,19 @@ package Messages;
 
 import Protocols.Client;
 import Protocols.ClientServer;
+import Services.ServerLogger;
 import States.LeaderState;
 import States.ServerState;
 import io.netty.channel.Channel;
+import org.apache.log4j.Logger;
+
+import java.util.ArrayList;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class QuitMessage extends ClientMessage{
+    private static Logger logger = ServerLogger.getLogger(ServerState.getInstance().getServerId(), QuitMessage.class);
 
     @Override
     public void handle(Channel channel) {
@@ -40,7 +46,7 @@ public class QuitMessage extends ClientMessage{
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            System.out.println("INFO : Deleted room before " + clientId + " quit");
+            logger.info("Deleted room before " + clientId + " quit");
         }
 
         // update global list - Leader class
@@ -53,10 +59,17 @@ public class QuitMessage extends ClientMessage{
 
         // update local server
         ServerState.getInstance().getIdMap().inverse().remove(channel);
+        ArrayList<String> members = ServerState.getInstance().getRoom(ServerState.getInstance().getMember(clientId).getRoom()).getMembers();
+        for (int i = 0; i < members.size(); i++) {
+            if (Objects.equals(members.get(i), clientId)){
+                members.remove(i);
+                break;
+            }
+        }
         if(channel.isActive()){
             ClientServer.send(channel,new RoomChangeReplyMessage(clientId,roomId,""));
         }
 
-        System.out.println("INFO : " + clientId + " quit");
+        logger.info( clientId + " quit");
     }
 }

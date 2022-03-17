@@ -3,15 +3,19 @@ package Heartbeat;
 import Messages.KickMessage;
 import Messages.VoteMessage;
 import Protocols.Client;
+import Services.ServerLogger;
 import States.LeaderState;
 import States.ServerState;
+import org.apache.log4j.Logger;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+
+import java.beans.beancontext.BeanContextServicesSupport;
 import java.util.concurrent.TimeUnit;
 
 public class Consensus  implements Job {
-
+    private static Logger logger = ServerLogger.getLogger(ServerState.getInstance().getServerId(), Consensus.class);
 
     @Override
     public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
@@ -47,7 +51,7 @@ public class Consensus  implements Job {
                         serverState.setVotes(serverState.getVotes() + 1);
                         ; // I suspect it already, so I vote yes.
                         Client.broadcast(new VoteMessage(localServerId, suspectServerId), serverState.getUpServers());
-
+                        logger.info("Leader "+leaderServerId+" suspect "+suspectServerId+" as down");
                         try {
                             TimeUnit.MILLISECONDS.sleep(consensusVoteDuration);
                         } catch (InterruptedException e) {
@@ -66,7 +70,7 @@ public class Consensus  implements Job {
                             serverState.removeHeartbeat(suspectServerId);
                             LeaderState.getInstance().getGlobalRoomList().remove(suspectServerId);
                             LeaderState.getInstance().getGlobalClientList().remove(suspectServerId);
-                            System.out.println("Server "+suspectServerId+" removed from the distributed server");
+                            logger.info("Leader "+leaderServerId+" removed the server "+suspectServerId+" from the system");
                         }
                     }
                 }
@@ -74,7 +78,7 @@ public class Consensus  implements Job {
             serverState.setOngoingConsensus(false);
         }
             else {
-                System.out.println("[SKIP] There seems to be on going consensus at the moment, skip.");
+                logger.info("[SKIP] There seems to be on going consensus at the moment");
             }
         }
 

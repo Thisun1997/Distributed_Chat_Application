@@ -1,7 +1,10 @@
 package Messages;
 
+import Services.ServerLogger;
 import States.LeaderState;
+import States.ServerState;
 import io.netty.channel.Channel;
+import org.apache.log4j.Logger;
 
 public class MoveJoinRequestMessage extends ClientMessage {
 
@@ -10,6 +13,7 @@ public class MoveJoinRequestMessage extends ClientMessage {
     private String formerRoomId;
     private String clientId;
     private String channelId;
+    private static Logger logger = ServerLogger.getLogger(ServerState.getInstance().getServerId(), MoveJoinRequestMessage.class);
 
     public MoveJoinRequestMessage(String serverId, String roomId, String formerRoomId, String clientId, String channelId) {
         this.serverId = serverId;
@@ -24,7 +28,7 @@ public class MoveJoinRequestMessage extends ClientMessage {
 
         LeaderState.getInstance().addToGlobalClientAndRoomList(clientId, serverId, roomId);
 
-        System.out.println("INFO : Moved Client [" + clientId + "] to server s" + serverId
-                + " and room [" + roomId + "] is updated as current room");
+        logger.info("Moved Client " + clientId + " to server " + serverId
+                + " and room " + roomId + " is updated as current room");
     }
 }

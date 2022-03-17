@@ -71,6 +71,7 @@ public class MoveJoinMessage extends ClientMessage {
         ServerState.getInstance().setMember(identity,member);
         ServerState.getInstance().getRoom(roomID).setMember(identity);
         ServerState.getInstance().getRoom(roomID).setMemberChannel(channel);
+        ServerState.getInstance().getIdMap().put(identity, channel);
 
         ChannelGroup newClientChannels= ServerState.getInstance().getRoom(roomID).getMemberGroup();
 

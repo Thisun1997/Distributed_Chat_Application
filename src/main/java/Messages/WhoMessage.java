@@ -4,14 +4,17 @@ import Core.Member;
 import Core.Room;
 import Protocols.ClientServer;
 import Protocols.Server;
+import Services.ServerLogger;
 import States.ServerState;
 import io.netty.channel.Channel;
+import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 
 public class WhoMessage extends ClientMessage{
 
     private String id;
+    private static Logger logger = ServerLogger.getLogger(ServerState.getInstance().getServerId(), WhoMessage.class);
     public WhoMessage(String id){
         this.id=id;
     }
@@ -26,5 +29,6 @@ public class WhoMessage extends ClientMessage{
         ArrayList<String> members =room.getMembers();
         String owner = room.getOwner();
         ClientServer.send(channel,new RoomContentsMessage(roomId,members,owner));
+        logger.debug("participants in room " + roomId + " : " + members);
     }
 }

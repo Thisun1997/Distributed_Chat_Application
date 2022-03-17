@@ -2,7 +2,8 @@ package Protocols;
 
 import Messages.IAmUpMessage;
 import Messages.Message;
-import Services.Log4jLogger;
+//import Services.Log4jLogger;
+import Services.ServerLogger;
 import States.ServerState;
 
 import io.netty.bootstrap.Bootstrap;
@@ -13,11 +14,13 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
+import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Hashtable;
 
 public class Client {
+    private static Logger logger = ServerLogger.getLogger(ServerState.getInstance().getServerId(), Client.class);
     public static void send(String id, Message msg, boolean async) {
         ServerState serverState = ServerState.getInstance();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
@@ -46,7 +49,7 @@ public class Client {
             }
             f.channel().closeFuture().sync();
         } catch (Exception e) {
-            Log4jLogger.logTrace("Server " + id + " is down");
+            logger.warn("Server " + id + " is down");
         } finally {
             workerGroup.shutdownGracefully();
         }

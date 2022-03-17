@@ -93,6 +93,7 @@ public class LeaderState {
     public String getServerIdIfRoomExist(String roomId){
         for(String serverId: globalRoomList.keySet()){
             List<Room> tempRoomList = globalRoomList.get(serverId);
+//            System.out.println(tempRoomList);
             for(Room room: tempRoomList){
                 if (Objects.equals(room.getId(), roomId)){
                     return serverId;
@@ -150,8 +151,8 @@ public class LeaderState {
     public void removeRoom(String serverID, String roomID, String mainHallRoomID, String ownerID) {
         List<Room> rooms = globalRoomList.get(serverID);
         ArrayList<String> formerClientList = null;
-        for(Room room:rooms){
-            if(room.getId().equals(roomID)){
+        for(Room room:rooms) {
+            if (room.getId().equals(roomID)) {
                 formerClientList = room.getMembers();
                 break;
             }
@@ -160,10 +161,11 @@ public class LeaderState {
         for(Room room:rooms) {
             if (room.getId().equals(mainHallRoomID)) {
                 room.getMembers().addAll(formerClientList);
-                formerClientList.forEach((memberId) -> {
-                    Member member=ServerState.getInstance().getMember(memberId);
-                    member.setRoom(mainHallRoomID);
-                });
+//                formerClientList.forEach((memberId) -> {
+//                    Member member=ServerState.getInstance().getMember(memberId);
+//                    member.setRoom(mainHallRoomID);
+//                });
+
             }
         }
     }

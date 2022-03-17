@@ -1,13 +1,15 @@
 package Protocols;
 
 import Messages.*;
+import Services.ServerLogger;
 import States.ServerState;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import io.netty.channel.*;
+import org.apache.log4j.Logger;
 
 public class ServerHandler extends ChannelInboundHandlerAdapter {
-
+    private static Logger logger = ServerLogger.getLogger(ServerState.getInstance().getServerId(), ServerHandler.class);
     private String baseHandler;
     ServerHandler(String baseHandler){
         this.baseHandler=baseHandler;
@@ -16,7 +18,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         if(baseHandler.equals("Client")) {
-            System.out.println("A client connected to the chat server");
+            logger.info("A client connected to the chat server");
         }
     }
 
@@ -40,7 +42,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
                 if(!ServerState.getInstance().getAlive(ctx.channel())) {
                     QuitMessage quitMessage = new QuitMessage();
                     quitMessage.handle(ctx.channel());
-                    System.out.println("A client disconnected from the chat server");
+                    logger.warn("A client disconnected from the chat server");
                 }
                 else{
                     ServerState.getInstance().setAlive(ctx.channel(),false);
@@ -109,7 +111,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
                         answerVoteMessage.handle();
                         break;
                     default:
-                        System.out.println("wrong option coordination message");
+                        logger.warn("wrong option coordination message");
                 }
             }
             else{
@@ -128,11 +130,23 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
                         roomCreateApprovalRequestMessage.handle(channel);
                         break;
                     case "joinroomapproval":
-                        JoinRoomApprovalResponseMessage joinRoomApprovalResponseMessage = gson.fromJson(gson.toJson(jm), JoinRoomApprovalResponseMessage.class);
-                        joinRoomApprovalResponseMessage.handle(channel);
+                        JoinRoomApprovalRequestMessage joinRoomApprovalRequestMessage = gson.fromJson(gson.toJson(jm), JoinRoomApprovalRequestMessage.class);
+                        joinRoomApprovalRequestMessage.handle(channel);
+                        break;
+                    case "deleteroom":
+                        DeleteRoomRequestMessage deleteRoomRequestMessage = gson.fromJson(gson.toJson(jm), DeleteRoomRequestMessage.class);
+                        deleteRoomRequestMessage.handle(channel);
+                        break;
+                    case "movejoin":
+                        MoveJoinRequestMessage moveJoinRequestMessage = gson.fromJson(gson.toJson(jm), MoveJoinRequestMessage.class);
+                        moveJoinRequestMessage.handle(channel);
+                        break;
+                    case "quit":
+                        QuitRequestMessage quitRequestMessage = gson.fromJson(gson.toJson(jm), QuitRequestMessage.class);
+                        quitRequestMessage.handle(channel);
                         break;
                     default:
-                        System.out.println("wrong type coordination message");
+                        logger.warn(type+" : Wrong type coordination message");
                 }
             }
         }
@@ -167,12 +181,16 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
                     MoveJoinMessage moveJoinMessage=gson.fromJson(gson.toJson(jm),MoveJoinMessage.class);
                     moveJoinMessage.handle(channel);
                     break;
+                case "message":
+                    MessageMessage messageMessage=gson.fromJson(gson.toJson(jm),MessageMessage.class);
+                    messageMessage.handle(channel);
+                    break;
                 case "quit":
                     QuitMessage quitMessage=gson.fromJson(gson.toJson(jm),QuitMessage.class);
                     quitMessage.handle(channel);
                     break;
                 default:
-                    System.out.println("wrong type client message");
+                    logger.warn("Wrong type client message");
             }
         }
     }

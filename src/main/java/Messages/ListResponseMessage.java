@@ -19,7 +19,6 @@ public class ListResponseMessage extends ClientMessage{
     @Override
     public void handle(Channel channel) {
         ServerState.getInstance().setTempRoomList(channelId,rooms);
-        System.out.println(ServerState.getInstance().getTempRoomList(channelId));
 
     }
 }

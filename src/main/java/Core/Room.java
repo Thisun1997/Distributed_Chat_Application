@@ -33,7 +33,9 @@ public class Room implements Cloneable{
         memberGroup.remove(channel);
     }
     public void setMember(String id) {
-        this.members.add(id);
+        if(!this.members.contains(id)) {
+            this.members.add(id);
+        }
     }
     public void setMemberChannel(Channel channel) {
         this.memberGroup.add(channel);

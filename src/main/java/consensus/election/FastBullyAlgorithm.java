@@ -4,9 +4,11 @@ package consensus.election;
 import Core.Room;
 import Messages.*;
 import Protocols.Client;
+import Services.ServerLogger;
 import States.LeaderState;
 import States.ServerState;
 import consensus.election.timeout.*;
+import org.apache.log4j.Logger;
 import org.quartz.*;
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -15,7 +17,7 @@ import java.util.Objects;
 import Services.Quartz;
 
 public class FastBullyAlgorithm implements Runnable{
-
+    private static Logger logger = ServerLogger.getLogger(ServerState.getInstance().getServerId(), FastBullyAlgorithm.class);
     String option;
     JobExecutionContext jobExecutionContext = null;
     static CoordinationMessage message;
@@ -56,7 +58,7 @@ public class FastBullyAlgorithm implements Runnable{
 
 
         Client.broadcast(new ElectionMessage(initiatingServer),candidateServers);
-        System.out.println("election message sent.");
+        logger.info("Election message sent by the server "+ServerState.getInstance().getServerId());
         startWaitingForAnswerMessage(electionTimeOut);
 
     }
@@ -74,14 +76,14 @@ public class FastBullyAlgorithm implements Runnable{
         LeaderState.getInstance().reset();
         ElectionMessage electionMessage=(ElectionMessage) message;
         String initiatingServerId = electionMessage.getId();
-        System.out.println("election message from "+ initiatingServerId+" received.");
+        logger.info("Election message from "+ initiatingServerId+" received.");
         String selfServerId = ServerState.getInstance().getServerId();
         try {
             Client.send(initiatingServerId, new AnswerMessage(selfServerId),true);
-            System.out.println("answer message sent.");
+            logger.info("Answer message sent to "+initiatingServerId);
         }
         catch (Exception e){
-            e.printStackTrace();
+            logger.warn("Unable to send the answer message to "+initiatingServerId+" caused by : "+e);
         }
         startWaitingForNominationOrCoordinationMessage(ServerState.getInstance().getElectionNominationTimeout());
     }
@@ -98,9 +100,9 @@ public class FastBullyAlgorithm implements Runnable{
             String highestPriorityCandidateId = ServerState.getInstance().getHighestPriorityCandidate();
             try {
                 Client.send(highestPriorityCandidateId,new NominationMessage(),true);
-                System.out.println("Sending nomination to : " + highestPriorityCandidateId);
+                logger.info("Sending nomination to server " + highestPriorityCandidateId+" after answer message timeout");
             } catch (Exception e) {
-                System.out.println("Server "+highestPriorityCandidateId+" is down...");
+                logger.warn("Unable to send the nomination message to server "+highestPriorityCandidateId+" caused by : "+e);
                 ServerState.getInstance().removeTempCandidateServer(highestPriorityCandidateId);
             }
             startWaitingForCoordinatorMessage(ServerState.getInstance().getElectionCoordinatorTimeout());
@@ -110,9 +112,10 @@ public class FastBullyAlgorithm implements Runnable{
             String highestPriorityCandidateId = ServerState.getInstance().getHighestPriorityCandidate();
             try {
                 Client.send(highestPriorityCandidateId,new NominationMessage(),true);
-                System.out.println("Sending nomination to : " + highestPriorityCandidateId);
+                logger.info("Sending nomination to : " + highestPriorityCandidateId+" after coordinator or nominator message timeout");
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.warn("Unable to send the nomination message to server "+highestPriorityCandidateId+" caused by : "+e);
+                ServerState.getInstance().removeTempCandidateServer(highestPriorityCandidateId);
             }
             resetWaitingForCoordinatorMessageTimer(this.jobExecutionContext, this.jobExecutionContext.getTrigger().getKey(),
                     ServerState.getInstance().getElectionCoordinatorTimeout());
@@ -137,14 +140,14 @@ public class FastBullyAlgorithm implements Runnable{
             ServerState.getInstance().setViewMessageReceived(true);
             ServerState.getInstance().setTempCandidateServer(leaderServerId);
 
-            System.out.println("view message received with leader as "+leaderServerId);
+            logger.info("View message received with leader as "+leaderServerId);
             leaderCheck = 0;
             if(LeaderState.getInstance().getLeaderID() != null){
                 leaderCheck = Integer.parseInt(LeaderState.getInstance().getLeaderID());
             }
             if (Integer.parseInt(selfServerId) >= Integer.parseInt(leaderServerId) && Integer.parseInt(selfServerId) >=leaderCheck){
                 Client.broadcast(new CoordinatorMessage(selfServerId),lowPriorityServerList);
-                System.out.println("coordinator message sent ("+option+") with leader as "+selfServerId);
+                logger.info("Coordinator message sent ["+option+"] with leader as "+selfServerId);
                 acceptNewLeader(selfServerId);
             }
             else if (Integer.parseInt(selfServerId) < Integer.parseInt(leaderServerId)){
@@ -154,7 +157,7 @@ public class FastBullyAlgorithm implements Runnable{
         }
         else if (strOption.equals("coordinatorAnswerTimeout") || Objects.equals(strOption, "coordinatorViewTimeout") || Objects.equals(strOption, "coordinatorFromNomination")){
             Client.broadcast(new CoordinatorMessage(selfServerId),lowPriorityServerList);
-            System.out.println("coordinator message sent ("+strOption+") with coordinator as "+selfServerId);
+            logger.info("Coordinator message sent ["+strOption +"] with leader as "+selfServerId);
             acceptNewLeader(selfServerId);
             if (Objects.equals(strOption, "coordinatorAnswerTimeout") || Objects.equals(strOption, "coordinatorFromNomination")){
                 stopElection();
@@ -170,7 +173,7 @@ public class FastBullyAlgorithm implements Runnable{
         ServerState.getInstance().setOngoingElection(false);
         ServerState.getInstance().setViewMessageReceived(false);
         ServerState.getInstance().setAnswerMessageReceived(false);
-        System.out.println("accepting new leader "+serverId);
+        logger.info("Accepting new leader server "+serverId);
 
 
         ArrayList<Room> roomList = new ArrayList<>();
@@ -193,17 +196,17 @@ public class FastBullyAlgorithm implements Runnable{
                 LeaderState.getInstance().reset();
             }
             Client.send(serverId,new LeaderUpdateMessage(ServerState.getInstance().getServerId(),ServerState.getInstance().getClientIdList(),roomList),true);
-
+            logger.info("Send information to new leader "+serverId);
         }
       }
 
     private void restartElection() {
+        logger.info("Restarting the election");
         stopElection();
         startElection();
     }
 
     public void stopElection() {
-
         ServerState.getInstance().initTempCandidateServers();
         ServerState.getInstance().setOngoingElection(false);
         stopWaitingForAnswerMessage();
@@ -235,12 +238,12 @@ public class FastBullyAlgorithm implements Runnable{
     private synchronized void startWaitingTimer(String groupId, Long timeout, JobDetail jobDetail) {
         try {
 
-            System.out.println(String.format("Starting the waiting job [%s] : %s",
+            logger.debug(String.format("Starting the waiting job [%s] : %s",
                     scheduler.getSchedulerName(), jobDetail.getKey()));
 
             if (scheduler.checkExists(jobDetail.getKey())) {
 
-                System.out.println(String.format("Job get trigger again [%s]", jobDetail.getKey().getName()));
+                logger.debug(String.format("Job get trigger again [%s]", jobDetail.getKey().getName()));
                 scheduler.triggerJob(jobDetail.getKey());
 
             } else {
@@ -257,18 +260,18 @@ public class FastBullyAlgorithm implements Runnable{
 
             try {
 
-                System.out.println(String.format("Job get trigger again [%s]", jobDetail.getKey().getName()));
+                logger.debug(String.format("Job get trigger again [%s]", jobDetail.getKey().getName()));
                 scheduler.triggerJob(jobDetail.getKey());
 
                 //System.err.println(Arrays.toString(scheduler.getTriggerKeys(GroupMatcher.anyGroup()).toArray()));
                 // [DEFAULT.MT_e8f718prrj3ol, group1.GOSSIPJOBTRIGGER, group1.CONSENSUSJOBTRIGGER, group_fast_bully.ELECTION_TRIGGER]
 
             } catch (SchedulerException e) {
-                e.printStackTrace();
+                logger.warn("Scheduler exception : "+e);
             }
 
         } catch (SchedulerException e) {
-              e.printStackTrace();
+            logger.warn("Scheduler exception : "+e);
         }
     }
 
@@ -277,7 +280,7 @@ public class FastBullyAlgorithm implements Runnable{
             if (scheduler.checkExists(jobKey)) {
                 scheduler.interrupt(jobKey);
                 //scheduler.deleteJob(jobKey);
-                System.out.println(String.format("Job [%s] get interrupted from [%s]",
+                logger.debug(String.format("Job [%s] get interrupted from [%s]",
                         jobKey, scheduler.getSchedulerName()));
             }
         } catch (SchedulerException e) {
@@ -304,11 +307,11 @@ public class FastBullyAlgorithm implements Runnable{
         otherServersList.addAll(otherServers.keySet());
         otherServersList.remove(selfServerId);
         Client.broadcast(new IAmUpMessage(selfServerId),otherServersList);
-        System.out.println("IamUp message sent");
+        logger.info("IamUp messages sent");
         try {
             startWaitingForViewMessage(ServerState.getInstance().getElectionAnswerTimeout());
         } catch (SchedulerException e) {
-            System.out.println("Error while waiting for the view message at fast bully election: " +
+            logger.warn("Error while waiting for the view message at fast bully election: " +
                     e.getLocalizedMessage());
         }
 
@@ -322,9 +325,9 @@ public class FastBullyAlgorithm implements Runnable{
         if(LeaderState.getInstance().getLeaderID() == null){
             try {
                 Client.send(senderServerId,new ViewMessage(senderServerId),true);
-                System.out.println("View message sent to "+senderServerId+" with leader as "+senderServerId);
+                logger.info("View message sent to "+senderServerId+" with leader as "+senderServerId);
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.warn("Unable to send the view message to server "+senderServerId+ " caused by : "+e);
             }
         }
         else{
@@ -336,9 +339,9 @@ public class FastBullyAlgorithm implements Runnable{
                     leader = LeaderState.getInstance().getLeaderID();
                 }
                 Client.send(senderServerId,new ViewMessage(leader),true);
-                System.out.println("View message sent to "+senderServerId+" with leader as "+leader);
+                logger.info("View message sent to "+senderServerId+" with leader as "+leader);
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.warn("Unable to send the view message to server "+senderServerId+ " caused by : "+e);
             }
         }
     }
@@ -348,7 +351,7 @@ public class FastBullyAlgorithm implements Runnable{
             JobDetail jobDetail = context.getJobDetail();
             if (scheduler.checkExists(jobDetail.getKey())) {
 
-                System.out.println(String.format("Job get trigger again [%s]", jobDetail.getKey().getName()));
+                logger.debug(String.format("Job get trigger again [%s]", jobDetail.getKey().getName()));
                 scheduler.triggerJob(jobDetail.getKey());
 
             } else {
@@ -361,21 +364,21 @@ public class FastBullyAlgorithm implements Runnable{
             }
 
         } catch (ObjectAlreadyExistsException oe) {
-            System.out.println(oe.getLocalizedMessage());
+            logger.trace(oe.getLocalizedMessage());
 
             try {
 
                 JobDetail jobDetail = context.getJobDetail();
-                System.out.println(String.format("Job get trigger again [%s]", jobDetail.getKey().getName()));
+                logger.debug(String.format("Job get trigger again [%s]", jobDetail.getKey().getName()));
 
                 scheduler.triggerJob(jobDetail.getKey());
 
             } catch (SchedulerException e) {
-                e.printStackTrace();
+                logger.warn("Scheduler exception : "+e);
             }
 
         } catch (SchedulerException e) {
-            e.printStackTrace();
+            logger.warn("Scheduler exception : "+e);
         }
     }
 
@@ -396,8 +399,10 @@ public class FastBullyAlgorithm implements Runnable{
                 startElection();
                 break;
             case "election":
-                replyAnswerForElectionMessage();
-                break;
+//                if(!ServerState.getInstance().getOngoingElection()) {
+                    replyAnswerForElectionMessage();
+                    break;
+//                }
             case "sendNominationAnswerTimeout":
             case "sendNominationCoordinatorTimeout":
                 sendNominationMessage(option);

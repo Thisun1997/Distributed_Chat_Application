@@ -1,10 +1,13 @@
 package Messages;
 
+import Services.ServerLogger;
 import States.ServerState;
 import io.netty.channel.Channel;
+import org.apache.log4j.Logger;
 
 public class LeaderStateUpdateCompleteMessage extends CoordinationMessage{
     private String id;
+    private static Logger logger = ServerLogger.getLogger(ServerState.getInstance().getServerId(), LeaderStateUpdateCompleteMessage.class);
 
     public LeaderStateUpdateCompleteMessage(String id){
         this.id=id;
@@ -13,7 +16,7 @@ public class LeaderStateUpdateCompleteMessage extends CoordinationMessage{
     @Override
     public void handle() {
         String serverID = this.id;
-        System.out.println("leader "+serverID+" update done..");
         ServerState.getInstance().setLeaderUpdateComplete(true);
+        logger.info("Leader server "+serverID+" update completed");
     }
 }

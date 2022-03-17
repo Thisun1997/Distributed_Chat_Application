@@ -1,9 +1,11 @@
 package Messages;
 
 import Protocols.CoordinationServer;
+import Services.ServerLogger;
 import States.LeaderState;
 import States.ServerState;
 import io.netty.channel.Channel;
+import org.apache.log4j.Logger;
 
 public class JoinRoomApprovalRequestMessage extends ClientMessage {
 
@@ -13,8 +15,9 @@ public class JoinRoomApprovalRequestMessage extends ClientMessage {
     private String roomId;
     private String channelId;
     private boolean inServer;
+    private static Logger logger = ServerLogger.getLogger(ServerState.getInstance().getServerId(), JoinRoomApprovalRequestMessage.class);
 
-    public JoinRoomApprovalRequestMessage(String clientId, String formerServerId, String roomId, String formerRoomId, String channelId, boolean inServer) {
+    public JoinRoomApprovalRequestMessage(String clientId, String formerServerId, String formerRoomId, String roomId, String channelId, boolean inServer) {
         this.channelId = channelId;
         this.clientId = clientId;
         this.formerRoomId = formerRoomId;
@@ -26,7 +29,7 @@ public class JoinRoomApprovalRequestMessage extends ClientMessage {
 
     @Override
     public void handle(Channel channel) {
-        System.out.println(inServer+" "+roomId+" ");
+//        System.out.println(inServer+" "+roomId+" ");
         if (inServer) {
             LeaderState.getInstance().InServerJoinRoomClient(clientId, formerServerId, formerRoomId, roomId);
         } else {
@@ -48,8 +51,8 @@ public class JoinRoomApprovalRequestMessage extends ClientMessage {
                         serverId,
                         approved,
                         channelId));
-                System.out.println("INFO : Join Room from [" + formerRoomId +
-                        "] to [" + roomId + "] for client " + clientId +
+                logger.info("Join Room from " + formerRoomId +
+                        " to " + roomId + " for client " + clientId +
                         " is" + (serverIDofTargetRoom != null ? " " : " not ") + "approved");
             } catch (Exception e) {
                 e.printStackTrace();

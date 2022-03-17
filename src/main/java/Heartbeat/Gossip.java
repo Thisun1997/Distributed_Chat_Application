@@ -45,7 +45,6 @@ public class Gossip implements Job {
             } else {
                 serverState.setSuspect(serverId,0); // 0 = false = not-suspected
             }
-
         }
             if (ServerState.getInstance().getLeaderUpdateComplete() && !ServerState.getInstance().getOngoingElection()) {
 

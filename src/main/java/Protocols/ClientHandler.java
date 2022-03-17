@@ -71,7 +71,7 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
                 ctx.close();
                 break;
             default:
-                System.out.println("default");
+//                System.out.println("default");
         }
     }
 

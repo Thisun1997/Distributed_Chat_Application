@@ -2,17 +2,21 @@ package Messages;
 
 import Protocols.Client;
 import Protocols.ClientServer;
+import Services.ServerLogger;
 import States.LeaderState;
 import States.ServerState;
 import io.netty.channel.Channel;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.util.concurrent.GlobalEventExecutor;
+import org.apache.log4j.Logger;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class JoinRoomMessage extends ClientMessage {
     private String roomid;
+    private static Logger logger = ServerLogger.getLogger(ServerState.getInstance().getServerId(), JoinRoomMessage.class);
 
     public JoinRoomMessage(String roomId) {
         this.roomid = roomId;
@@ -47,7 +51,7 @@ public class JoinRoomMessage extends ClientMessage {
        String serverId = ServerState.getInstance().getServerId();
 
        if (ServerState.getInstance().getRoom(formerRoomId).getOwner().equals(clientId)) {
-           System.out.println("WARN : Join room denied, Client" + clientId + " Owns a room");
+           logger.warn("Join room denied, Client" + clientId + " Owns a room");
 
            ClientServer.send(channel, new RoomChangeReplyMessage(clientId, formerRoomId, formerRoomId));
 
@@ -66,7 +70,7 @@ public class JoinRoomMessage extends ClientMessage {
            ServerState.getInstance().getRoom(roomid).setMember(clientId);
            ServerState.getInstance().getRoom(roomid).setMemberChannel(channel);
 
-           System.out.println("INFO : client [" + clientId + "] joined room :" + roomid);
+           logger.info("client " + clientId + " joined room :" + roomid);
 
 
            // creating broadcast list
@@ -95,14 +99,14 @@ public class JoinRoomMessage extends ClientMessage {
                    approvedJoinRoomServer=serverIDofTargetRoom ;
                    LeaderState.getInstance().removeFromGlobalClientAndRoomList(clientId, serverId, formerRoomId);//remove before route, later add on move join
                }
-               System.out.println("INFO : Received response for route request for join room (Self is Leader)");
+               logger.info("Received response for route request for join room in leader "+LeaderState.getInstance().getLeaderID());
 
            } else {
                Client.send(LeaderState.getInstance().getLeaderID(),
                        new JoinRoomApprovalRequestMessage(clientId,serverId,formerRoomId,roomid,channel.id().asShortText(),false),false);
                isJoinRoomApproved = ServerState.getInstance().getIsJoinRoomApproved(channel.id().asShortText());
                approvedJoinRoomServer=ServerState.getInstance().getApprovedJoinRoomServer(channel.id().asShortText());
-               System.out.println("INFO : Received response for route request for join room");
+               logger.info("Received response for route request for join room");
            }
 
            if (isJoinRoomApproved == 1) {
@@ -110,15 +114,15 @@ public class JoinRoomMessage extends ClientMessage {
                ServerState.getInstance().getRoom(formerRoomId).removeMember(clientId);
                ServerState.getInstance().getRoom(formerRoomId).removeMemberChannel(channel);
                ServerState.getInstance().getIdMap().inverse().remove(channel);
-               System.out.println("INFO : client [" + clientId + "] left room :" + formerRoomId);
+               logger.info(" client " + clientId + " left room :" + formerRoomId);
 
-
-               System.out.println("INFO : Send broadcast to former room in local server");
 
                ChannelGroup oldClientChannels = ServerState.getInstance().getRoom(formerRoomId).getMemberGroup();
 
                ClientServer.broadcast(oldClientChannels,
                        new RoomChangeReplyMessage(clientId, formerRoomId, roomid));
+
+               logger.info("Send broadcast to former room in local server");
 
                //server change : route
                ClientServer.send(channel,
@@ -128,11 +132,11 @@ public class JoinRoomMessage extends ClientMessage {
                                ServerState.getInstance().getServers().get(approvedJoinRoomServer)[2]));
 
                ServerState.getInstance().setAlive(channel, true);
-               System.out.println("INFO : Route Message Sent to Client");
+               logger.info("Route Message Sent to Client");
                ServerState.getInstance().removeApprovedJoinRoomServer(channel.id().asShortText());
 
            } else if (isJoinRoomApproved == 0) { // Room not found on system
-               System.out.println("WARN : Received room ID [" + roomid + "] does not exist");
+               logger.warn("Received room ID [" + roomid + "] does not exist");
                ClientServer.send(channel,new RoomChangeReplyMessage(clientId, formerRoomId, formerRoomId));
            }
            ServerState.getInstance().removeIsJoinRoomApproved(channel.id().asShortText());
