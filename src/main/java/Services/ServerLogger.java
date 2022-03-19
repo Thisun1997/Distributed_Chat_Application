@@ -13,7 +13,7 @@ public class ServerLogger {
 
 
     private ServerLogger(String selfID){
-        File logFile = new File("Logs/" + selfID + ".log");
+        File logFile = new File("Logs/" + "s"+selfID + ".log");
         try {
             fileAppender = new FileAppender(newLayout, logFile.getAbsolutePath(), false);
         } catch (IOException e) {

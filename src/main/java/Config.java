@@ -1,75 +1,61 @@
 import States.ServerState;
 
-import java.util.Hashtable;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.Properties;
+import java.util.Scanner;
 
 public class Config {
 
- public static void setup1(){
-  ServerState serverState=ServerState.getInstance();
-  serverState.setElectionAnswerTimeout(10L);
-  serverState.setElectionCoordinatorTimeout(10L);
-  serverState.setElectionNominationTimeout(30L);
-  serverState.setConsensusVoteDuration(5L);
-  serverState.setServerId("1");
-  serverState.setServer("1","localhost","8070","4444");
-  serverState.setServer("2","localhost","8000","7990");
-  serverState.setServer("3","localhost","7000","4000");
-  serverState.setServer("4","localhost","6000","3000");
-  serverState.setAliveErrorFactor("4");
-  serverState.setServerAddress("localhost");
-  serverState.setCoordinationPort("8070");
-  serverState.setClientPort("4444");
+    public static void setup() {
 
- }
- public static void setup2(){
-  ServerState serverState=ServerState.getInstance();
-  serverState.setElectionAnswerTimeout(10L);
-  serverState.setElectionCoordinatorTimeout(10L);
-  serverState.setElectionNominationTimeout(30L);
-  serverState.setConsensusVoteDuration(5L);
-  serverState.setServerId("2");
-  serverState.setServer("1","localhost","8070","4444");
-  serverState.setServer("2","localhost","8000","7990");
-  serverState.setServer("3","localhost","7000","4000");
-  serverState.setServer("4","localhost","6000","3000");
-  serverState.setAliveErrorFactor("4");
-  serverState.setServerAddress("localhost");
-  serverState.setCoordinationPort("8000");
-  serverState.setClientPort("7990");
+        InputStream inputStream=null;
+        Scanner sc = null;
+        try {
+            ServerState serverState = ServerState.getInstance();
+            String localServerId=System.getenv("localServerId").replace("s", "");
+            serverState.setServerId(localServerId);
+            File configFile = new File("src/main/resources/config.properties");
+            inputStream = new FileInputStream(configFile);
+            Properties props = new Properties();
+            props.load(inputStream);
+            serverState.setElectionAnswerTimeout(Long.parseLong(props.getProperty("electionAnswerTimeout")));
+            serverState.setElectionCoordinatorTimeout(Long.parseLong(props.getProperty("electionCoordinatorTimeout")));
+            serverState.setElectionNominationTimeout(Long.parseLong(props.getProperty("electionNominationTimeout")));
+            serverState.setConsensusVoteDuration(Long.parseLong(props.getProperty("consensusVoteDuration")));
+            File file = new File("src/main/resources/serverInfo.txt");
+            sc = new Scanner(file);
+            String line=null;
+            int serverCount=0;
+            while (sc.hasNextLine()) {
+                line = sc.nextLine().trim();
+                serverCount++;
+                String[] serverInfo=line.split("\\s+");
+                String serverId=serverInfo[0].trim().replace("s", "");
+                String serverAddress=serverInfo[1].trim();
+                String clientPort=serverInfo[2].trim();
+                String coordinationPort=serverInfo[3].trim();
+                serverState.setServer(serverId,serverAddress,coordinationPort,clientPort);
+                if(localServerId.equals(serverId)){
+                    serverState.setServerAddress(serverAddress);
+                    serverState.setCoordinationPort(coordinationPort);
+                    serverState.setClientPort(clientPort);
+                }
+            }
+            serverState.setAliveErrorFactor(serverCount+1);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        finally {
+                try {
+                    if (inputStream!=null) inputStream.close();
+                    if (sc != null) sc.close();
+                }
+                catch (Exception e){
+                    e.printStackTrace();
+                }
+        }
+    }
 
- }
- public static void setup3(){
-  ServerState serverState=ServerState.getInstance();
-  serverState.setElectionAnswerTimeout(10L);
-  serverState.setElectionCoordinatorTimeout(10L);
-  serverState.setElectionNominationTimeout(30L);
-  serverState.setConsensusVoteDuration(5L);
-  serverState.setServerId("3");
-  serverState.setServer("1","localhost","8070","4444");
-  serverState.setServer("2","localhost","8000","7990");
-  serverState.setServer("3","localhost","7000","4000");
-  serverState.setServer("4","localhost","6000","3000");
-  serverState.setAliveErrorFactor("4");
-  serverState.setServerAddress("localhost");
-  serverState.setCoordinationPort("7000");
-  serverState.setClientPort("4000");
-
- }
- public static void setup4(){
-  ServerState serverState=ServerState.getInstance();
-  serverState.setElectionAnswerTimeout(10L);
-  serverState.setElectionCoordinatorTimeout(10L);
-  serverState.setElectionNominationTimeout(30L);
-  serverState.setConsensusVoteDuration(5L);
-  serverState.setServerId("4");
-  serverState.setServer("1","localhost","8070","4444");
-  serverState.setServer("2","localhost","8000","7990");
-  serverState.setServer("3","localhost","7000","4000");
-  serverState.setServer("4","localhost","6000","3000");
-  serverState.setAliveErrorFactor("4");
-  serverState.setServerAddress("localhost");
-  serverState.setCoordinationPort("6000");
-  serverState.setClientPort("3000");
-
- }
 }

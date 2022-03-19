@@ -18,34 +18,35 @@ import java.util.concurrent.ThreadLocalRandom;
 public class Gossip implements Job {
 
     @Override
-    public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
-        ServerState serverState = ServerState.getInstance();
-        LeaderState leaderState = LeaderState.getInstance();
-        int aliveErrorFactor =Integer.parseInt(serverState.getAliveErrorFactor());
-        String localServerId = serverState.getServerId();
-        ArrayList<String> heartbeatServers= new ArrayList<String>();
-        heartbeatServers.addAll(serverState.getUpServers());
-        heartbeatServers.add(ServerState.getInstance().getServerId());
-        for (String serverId : heartbeatServers) {
-            // get current heartbeat count of a server
-            int heartbeatCount = serverState.getHeartbeat(serverId);
-            // first update heartbeat count vector
-            if (serverId.equals(localServerId)) {
-                serverState.setHeartbeat(serverId, 0); // reset my own vector always
-            } else {
-                // up count all others
-                heartbeatCount++;
-                serverState.setHeartbeat(serverId, heartbeatCount);
-            }
-            // FIX get the fresh updated current count again
-            heartbeatCount = serverState.getHeartbeat(serverId);
+    public void execute(JobExecutionContext jobExecutionContext) {
+        try {
+            ServerState serverState = ServerState.getInstance();
+            LeaderState leaderState = LeaderState.getInstance();
+            int aliveErrorFactor = serverState.getAliveErrorFactor();
+            String localServerId = serverState.getServerId();
+            ArrayList<String> heartbeatServers = new ArrayList<String>();
+            heartbeatServers.addAll(serverState.getUpServers());
+            heartbeatServers.add(ServerState.getInstance().getServerId());
+            for (String serverId : heartbeatServers) {
+                // get current heartbeat count of a server
+                int heartbeatCount = serverState.getHeartbeat(serverId);
+                // first update heartbeat count vector
+                if (serverId.equals(localServerId)) {
+                    serverState.setHeartbeat(serverId, 0); // reset my own vector always
+                } else {
+                    // up count all others
+                    heartbeatCount++;
+                    serverState.setHeartbeat(serverId, heartbeatCount);
+                }
+                // FIX get the fresh updated current count again
+                heartbeatCount = serverState.getHeartbeat(serverId);
                 // if heart beat count is more than error factor
-            if (heartbeatCount > aliveErrorFactor) {
-                serverState.setSuspect(serverId,1); // 1 = true = suspected
-            } else {
-                serverState.setSuspect(serverId,0); // 0 = false = not-suspected
+                if (heartbeatCount > aliveErrorFactor) {
+                    serverState.setSuspect(serverId, 1); // 1 = true = suspected
+                } else {
+                    serverState.setSuspect(serverId, 0); // 0 = false = not-suspected
+                }
             }
-        }
             if (ServerState.getInstance().getLeaderUpdateComplete() && !ServerState.getInstance().getOngoingElection()) {
 
                 String leaderId = leaderState.getLeaderID();
@@ -56,14 +57,18 @@ public class Gossip implements Job {
                     FastBullyAlgorithm.initialize();
                 }
             }
-            int numServers = serverState.getUpServers().size()+1; //peers+local server
+            int numServers = serverState.getUpServers().size() + 1; //peers+local server
             if (numServers > 1) { // Gossip required at least 2 servers to be up
 
                 // change concurrent hashmap to hashmap before sending
                 Hashtable<String, Integer> heartbeatCounts = new Hashtable<String, Integer>();
                 heartbeatCounts.putAll(serverState.getHeartbeats());
-                Client.send(getRoundRobinServer(),new GossipMessage(localServerId,heartbeatCounts),true);
+                Client.send(getRoundRobinServer(), new GossipMessage(localServerId, heartbeatCounts), true);
             }
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
     }
 
     public String getRoundRobinServer(){

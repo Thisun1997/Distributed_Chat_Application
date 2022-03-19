@@ -161,11 +161,6 @@ public class LeaderState {
         for(Room room:rooms) {
             if (room.getId().equals(mainHallRoomID)) {
                 room.getMembers().addAll(formerClientList);
-//                formerClientList.forEach((memberId) -> {
-//                    Member member=ServerState.getInstance().getMember(memberId);
-//                    member.setRoom(mainHallRoomID);
-//                });
-
             }
         }
     }

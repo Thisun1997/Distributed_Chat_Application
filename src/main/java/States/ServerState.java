@@ -26,7 +26,7 @@ public class ServerState {
     private String serverAddress;
     private String clientPort;
     private String coordinationPort;
-    private String aliveErrorFactor;
+    private int aliveErrorFactor;
     private AtomicBoolean ongoingElection;
     private AtomicBoolean ongoingConsensus;
     private AtomicBoolean leaderUpdateComplete;
@@ -137,11 +137,11 @@ public class ServerState {
         return votes;
     }
 
-    public String getAliveErrorFactor() {
+    public int getAliveErrorFactor() {
         return aliveErrorFactor;
     }
 
-    public void setAliveErrorFactor(String aliveErrorFactor) {
+    public void setAliveErrorFactor(int aliveErrorFactor) {
         this.aliveErrorFactor = aliveErrorFactor;
     }
 

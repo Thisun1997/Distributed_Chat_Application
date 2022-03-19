@@ -26,8 +26,20 @@ public class MoveJoinRequestMessage extends ClientMessage {
     @Override
     public void handle(Channel channel) {
 
-        LeaderState.getInstance().addToGlobalClientAndRoomList(clientId, serverId, roomId);
+        //added ro find serverId from former clientId
+        String formerServerId = null;
 
+        for (String serverId : LeaderState.getInstance().getGlobalClientList().keySet()) {
+            if (LeaderState.getInstance().getGlobalClientList().get(serverId).contains(clientId)) {
+                formerServerId = serverId;
+                break;
+            }
+        }
+        //moved from joinroomrequest
+        synchronized (LeaderState.getInstance()) {
+            LeaderState.getInstance().removeFromGlobalClientAndRoomList(clientId, formerServerId, formerRoomId);
+            LeaderState.getInstance().addToGlobalClientAndRoomList(clientId, serverId, roomId);
+        }
         logger.info("Moved Client " + clientId + " to server " + serverId
                 + " and room " + roomId + " is updated as current room");
     }

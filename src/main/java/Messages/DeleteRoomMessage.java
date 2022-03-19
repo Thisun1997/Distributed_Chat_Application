@@ -17,8 +17,8 @@ import java.util.concurrent.Executors;
 
 public class DeleteRoomMessage extends ClientMessage{
 
-    private  String roomid;
-    private static Logger logger = ServerLogger.getLogger(ServerState.getInstance().getServerId(), DeleteRoomMessage.class);
+    private  final String roomid;
+    private static final Logger logger = ServerLogger.getLogger(ServerState.getInstance().getServerId(), DeleteRoomMessage.class);
 
     DeleteRoomMessage(String roomId){
         this.roomid=roomId;
@@ -64,6 +64,7 @@ public class DeleteRoomMessage extends ClientMessage{
                 }
                 logger.info("Room " + roomid + " was deleted by : " + clientId);
 
+                System.out.println("middle"+ServerState.getInstance().getRoom(mainHallId).getMembers().toString());
 
                 ArrayList<String> formerClients = ServerState.getInstance().getRoom(roomid).getMembers();
                 ChannelGroup formerChannels = ServerState.getInstance().getRoom(roomid).getMemberGroup();
@@ -71,22 +72,13 @@ public class DeleteRoomMessage extends ClientMessage{
                 ChannelGroup mainHallChannels = ServerState.getInstance().getRoom(mainHallId).getMemberGroup();
 
                 //add clients in deleted room to main hall
-//                mainHallClients.addAll(formerClients);
                 mainHallChannels.addAll(formerChannels);
-
-                for (String c:formerClients){
-                    if(!mainHallClients.contains(c)){
-                        mainHallClients.add(c);
-                    }
-                }
-
 
                 ServerState.getInstance().getRooms().remove(roomid);
                 ServerState.getInstance().getMember(clientId).setIsRoomOwner(false);
                 for(String formerClient: formerClients){
                     Member member=ServerState.getInstance().getMember(formerClient);
                     member.setRoom(mainHallId);
-
                     ClientServer.broadcast(mainHallChannels,new RoomChangeReplyMessage(formerClient, roomid, mainHallId));
                 }
                 ClientServer.send(channel,new DeleteRoomReplyMessage(roomid,true));

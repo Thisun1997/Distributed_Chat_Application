@@ -1,5 +1,6 @@
 package Messages;
 
+import Core.Room;
 import Protocols.Client;
 import Protocols.ClientServer;
 import Services.ServerLogger;
@@ -40,7 +41,7 @@ public class QuitMessage extends ClientMessage{
     public void handleBase(Channel channel) {
         String clientId= ServerState.getInstance().getIdMap().inverse().get(channel);
         String roomId=ServerState.getInstance().getMember(clientId).getRoom();
-        if (ServerState.getInstance().getRoom(roomId).getOwner().equals(clientId)) {
+        if (ServerState.getInstance().getMember(clientId).getIsRoomOwner()) {
             try {
                 new DeleteRoomMessage(roomId).handle(channel);
             } catch (Exception e) {
@@ -59,13 +60,11 @@ public class QuitMessage extends ClientMessage{
 
         // update local server
         ServerState.getInstance().getIdMap().inverse().remove(channel);
-        ArrayList<String> members = ServerState.getInstance().getRoom(ServerState.getInstance().getMember(clientId).getRoom()).getMembers();
-        for (int i = 0; i < members.size(); i++) {
-            if (Objects.equals(members.get(i), clientId)){
-                members.remove(i);
-                break;
-            }
-        }
+
+        Room room=ServerState.getInstance().getRoom(ServerState.getInstance().getMember(clientId).getRoom());
+        room.removeMember(clientId);
+        room.removeMemberChannel(channel);
+
         if(channel.isActive()){
             ClientServer.send(channel,new RoomChangeReplyMessage(clientId,roomId,""));
         }

@@ -43,8 +43,8 @@ public class JoinRoomApprovalRequestMessage extends ClientMessage {
                     } else {
                         serverId = ServerState.getInstance().getServerId();
                     }
-                    LeaderState.getInstance().removeFromGlobalClientAndRoomList(clientId, formerServerId, formerRoomId);//remove before route, later add on move join
-
+                   // LeaderState.getInstance().removeFromGlobalClientAndRoomList(clientId, formerServerId, formerRoomId);//remove before route, later add on move join
+                    // move to movejoin message handler to avoid new client join with same identity of clientId
                 }
 
                 CoordinationServer.send(channel, new JoinRoomApprovalResponseMessage(

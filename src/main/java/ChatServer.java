@@ -22,7 +22,6 @@ public class ChatServer {
             String coordinationPort = serverState.getCoordinationPort();
             Server coordinationServer = new CoordinationServer(coordinationPort);
             coordinationServer.start();
-
             String clientPort = serverState.getClientPort();
             Server clientServer = new ClientServer(clientPort);
             clientServer.start();
