@@ -23,7 +23,7 @@ public class ClientIdApprovalRequestMessage extends ClientMessage{
     public void handle(Channel channel) {
         boolean clientIDTaken = LeaderState.getInstance().isClientIDTaken(identity);
         if(!clientIDTaken){
-            LeaderState.getInstance().addToGlobalClientAndRoomList(identity, serverId,"MainHall-"+serverId);
+            LeaderState.getInstance().addToGlobalClientAndRoomList(identity, serverId,"MainHall-s"+serverId);
 
         }
         CoordinationServer.send(channel,new ClientIdApprovalResponseMessage(channelId,clientIDTaken));

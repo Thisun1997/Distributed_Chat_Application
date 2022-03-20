@@ -38,40 +38,42 @@ public class Consensus  implements Job {
                     String localServerId = serverState.getServerId();
 
                     // if I am leader, and suspect someone, I want to start voting to KICK him!
-                    if (leaderServerId.equals(localServerId)) {
-                        // find the next suspect to vote and break the loop
-                        for (String serverId : serverState.getSuspects().keySet()) {
-                            if (serverState.getSuspect(serverId) == 1) {
-                                suspectServerId = serverId;
-                                break;
+                    if(leaderServerId != null) {
+                        if (leaderServerId.equals(localServerId)) {
+                            // find the next suspect to vote and break the loop
+                            for (String serverId : serverState.getSuspects().keySet()) {
+                                if (serverState.getSuspect(serverId) == 1) {
+                                    suspectServerId = serverId;
+                                    break;
+                                }
                             }
-                        }
-                        // got a suspect
-                        if (suspectServerId != null) {
+                            // got a suspect
+                            if (suspectServerId != null) {
 
-                            serverState.setVotes(serverState.getVotes() + 1);
-                            ; // I suspect it already, so I vote yes.
-                            Client.broadcast(new VoteMessage(localServerId, suspectServerId), serverState.getUpServers());
-                            logger.info("Leader " + leaderServerId + " suspect " + suspectServerId + " as down");
-                            try {
-                                TimeUnit.MILLISECONDS.sleep(consensusVoteDuration);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
+                                serverState.setVotes(serverState.getVotes() + 1);
+                                ; // I suspect it already, so I vote yes.
+                                Client.broadcast(new VoteMessage(localServerId, suspectServerId), serverState.getUpServers());
+                                logger.info("Leader " + leaderServerId + " suspect " + suspectServerId + " as down");
+                                try {
+                                    TimeUnit.MILLISECONDS.sleep(consensusVoteDuration);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
 
-                            // remove server or do nothing
+                                // remove server or do nothing
 
-                            if (serverState.getVotes() > ServerState.getInstance().getUpServers().size() / 2) {
+                                if (serverState.getVotes() > ServerState.getInstance().getUpServers().size() / 2) {
 
-                                Client.broadcast(new KickMessage(suspectServerId), serverState.getUpServers());
+                                    Client.broadcast(new KickMessage(suspectServerId), serverState.getUpServers());
 
-                                //have to add some other logics according to the needs.
-                                serverState.downServer(suspectServerId);
-                                serverState.removeSuspect(suspectServerId);
-                                serverState.removeHeartbeat(suspectServerId);
-                                LeaderState.getInstance().getGlobalRoomList().remove(suspectServerId);
-                                LeaderState.getInstance().getGlobalClientList().remove(suspectServerId);
-                                logger.info("Leader " + leaderServerId + " removed the server " + suspectServerId + " from the system");
+                                    //have to add some other logics according to the needs.
+                                    serverState.downServer(suspectServerId);
+                                    serverState.removeSuspect(suspectServerId);
+                                    serverState.removeHeartbeat(suspectServerId);
+                                    LeaderState.getInstance().getGlobalRoomList().remove(suspectServerId);
+                                    LeaderState.getInstance().getGlobalClientList().remove(suspectServerId);
+                                    logger.info("Leader " + leaderServerId + " removed the server " + suspectServerId + " from the system");
+                                }
                             }
                         }
                     }

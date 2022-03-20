@@ -44,7 +44,7 @@ public class ServerState {
     private Hashtable<String,Integer> isRoomCreationApproved;
     private CopyOnWriteArrayList<String> tempCandidateServers;
     private CopyOnWriteArrayList<Channel> alive;
-    private ArrayList<String> lowPriorityServers = new ArrayList<>();
+    private ArrayList<String> lowPriorityServers;
     private ArrayList<String> candidateServers;
     private ArrayList<String> upServers;
     private ArrayList<String> roundRobinServers;
@@ -73,6 +73,7 @@ public class ServerState {
         this.isRoomCreationApproved=new Hashtable<String ,Integer>();
         this.clientIdApproved=new Hashtable<String,Integer>();
         this.tempRoomList=new Hashtable<String,ArrayList<String>>();
+        this.lowPriorityServers= new ArrayList<String>();
 
 
     }
@@ -323,7 +324,7 @@ public class ServerState {
         this.answerMessageReceived.set(answerMessageReceived);
     }
 
-    public ArrayList<String> getCandidateServers() {
+    public synchronized ArrayList<String> getCandidateServers() {
         return this.candidateServers;
     }
 
@@ -364,16 +365,16 @@ public class ServerState {
         return clientIdList;
     }
 
-    public ArrayList<String> getLowPriorityServers() {
-        return lowPriorityServers;
+    public synchronized ArrayList<String> getLowPriorityServers() {
+        return lowPriorityServers ;
     }
 
     private synchronized void startServer(String id) {
-        Room mainHall = new Room("MainHall-" + id, "");
-        this.rooms.put("MainHall-" + id, mainHall);
+        Room mainHall = new Room("MainHall-s" + id, "");
+        this.rooms.put("MainHall-s" + id, mainHall);
     }
 
-    public ArrayList<String> getUpServers() {
+    public synchronized ArrayList<String> getUpServers() {
         return upServers;
     }
 

@@ -62,7 +62,7 @@ public class NewIdentityMessage extends ClientMessage{
              // if client is approved
              if (isClientApproved == 1) {
                  ServerState.getInstance().getIdMap().put(identity,channel);
-                 String mainHallID = "MainHall-" + ServerState.getInstance().getServerId();
+                 String mainHallID = "MainHall-s" + ServerState.getInstance().getServerId();
                  Member member = new Member(identity,mainHallID);
                  ServerState.getInstance().setMember(identity,member);
                  // If I am the leader update the global list.

@@ -17,7 +17,7 @@ public class ChatServer {
     public void init() throws Exception {
         try {
             ServerState serverState = ServerState.getInstance();
-            String mainHallID="MainHall-" + ServerState.getInstance().getServerId();
+            String mainHallID="MainHall-s" + ServerState.getInstance().getServerId();
             ServerState.getInstance().setRoom(mainHallID,new Room(mainHallID,""));
             String coordinationPort = serverState.getCoordinationPort();
             Server coordinationServer = new CoordinationServer(coordinationPort);

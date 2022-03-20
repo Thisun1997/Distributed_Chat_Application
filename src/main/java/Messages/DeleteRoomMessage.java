@@ -12,6 +12,7 @@ import io.netty.channel.group.ChannelGroup;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -48,7 +49,7 @@ public class DeleteRoomMessage extends ClientMessage{
     }
 
     private void handleBase(Channel channel){
-        String mainHallId = "MainHall-" + ServerState.getInstance().getServerId();
+        String mainHallId = "MainHall-s" + ServerState.getInstance().getServerId();
         String clientId=ServerState.getInstance().getIdMap().inverse().get(channel);
         if(ServerState.getInstance().getRooms().containsKey(roomid)){
             //check sync
@@ -64,8 +65,6 @@ public class DeleteRoomMessage extends ClientMessage{
                 }
                 logger.info("Room " + roomid + " was deleted by : " + clientId);
 
-                System.out.println("middle"+ServerState.getInstance().getRoom(mainHallId).getMembers().toString());
-
                 ArrayList<String> formerClients = ServerState.getInstance().getRoom(roomid).getMembers();
                 ChannelGroup formerChannels = ServerState.getInstance().getRoom(roomid).getMemberGroup();
                 ArrayList<String> mainHallClients = ServerState.getInstance().getRoom(mainHallId).getMembers();
@@ -73,6 +72,9 @@ public class DeleteRoomMessage extends ClientMessage{
 
                 //add clients in deleted room to main hall
                 mainHallChannels.addAll(formerChannels);
+                if(!Objects.equals(LeaderState.getInstance().getLeaderID(), ServerState.getInstance().getServerId())){
+                    mainHallClients.addAll(formerClients);
+                }
 
                 ServerState.getInstance().getRooms().remove(roomid);
                 ServerState.getInstance().getMember(clientId).setIsRoomOwner(false);

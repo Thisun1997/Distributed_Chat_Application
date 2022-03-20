@@ -90,7 +90,7 @@ public class LeaderState {
     }
 
 
-    public String getServerIdIfRoomExist(String roomId){
+    public synchronized String getServerIdIfRoomExist(String roomId){
         for(String serverId: globalRoomList.keySet()){
             List<Room> tempRoomList = globalRoomList.get(serverId);
 //            System.out.println(tempRoomList);
@@ -103,7 +103,7 @@ public class LeaderState {
         return null;
     }
 
-    public void InServerJoinRoomClient(String clientID, String serverID, String formerRoomID, String roomID) {
+    public synchronized void InServerJoinRoomClient(String clientID, String serverID, String formerRoomID, String roomID) {
         removeFromGlobalClientAndRoomList(clientID, serverID, formerRoomID);
         addToGlobalClientAndRoomList(clientID, serverID, roomID);
     }
@@ -134,7 +134,7 @@ public class LeaderState {
         return getRoomIDList().contains(roomID);
     }
 
-    public void addToRoomList(String clientID, String serverID, String roomID, String former) {
+    public synchronized void addToRoomList(String clientID, String serverID, String roomID, String former) {
         Room newRoom = new Room(roomID,clientID);
         globalRoomList.get(serverID).add(newRoom);
         for(Room room: globalRoomList.get(serverID)){
@@ -148,7 +148,7 @@ public class LeaderState {
 
     }
 
-    public void removeRoom(String serverID, String roomID, String mainHallRoomID, String ownerID) {
+    public synchronized void removeRoom(String serverID, String roomID, String mainHallRoomID, String ownerID) {
         List<Room> rooms = globalRoomList.get(serverID);
         ArrayList<String> formerClientList = null;
         for(Room room:rooms) {

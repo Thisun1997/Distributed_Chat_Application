@@ -95,7 +95,6 @@ public class JoinRoomMessage extends ClientMessage {
 
                 if (isJoinRoomApproved == 1) {
                     approvedJoinRoomServer = serverIDofTargetRoom;
-                    LeaderState.getInstance().removeFromGlobalClientAndRoomList(clientId, serverId, formerRoomId);//remove before route, later add on move join
                 }
                 logger.info("Received response for route request for join room in leader " + LeaderState.getInstance().getLeaderID());
 

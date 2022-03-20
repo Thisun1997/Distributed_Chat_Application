@@ -18,7 +18,9 @@ public class JoinRoomApprovalResponseMessage extends ClientMessage{
     @Override
     public void handle(Channel channel) {
 //        System.out.println(serverId+" "+approved+channelId);
-        ServerState.getInstance().setApprovedJoinRoomServer(channelId,serverId);
+        if(serverId != null) {
+            ServerState.getInstance().setApprovedJoinRoomServer(channelId, serverId);
+        }
         int isJoinRoomApproved=Boolean.valueOf(approved)? 1 : 0;
 //        System.out.println(approved+"===="+isJoinRoomApproved);
         ServerState.getInstance().setIsJoinRoomApproved(channelId,isJoinRoomApproved);
