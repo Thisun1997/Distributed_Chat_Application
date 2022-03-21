@@ -9,6 +9,8 @@ import java.util.Scanner;
 public class Config {
 
     public static void setup() {
+//  config properties are static data:include in built image
+//  server info are dynamic data:include in mount volume config
 
         InputStream inputStream=null;
         Scanner sc = null;
@@ -16,7 +18,7 @@ public class Config {
             ServerState serverState = ServerState.getInstance();
             String localServerId=System.getenv("localServerId").replace("s", "");
             serverState.setServerId(localServerId);
-            File configFile = new File("src/main/resources/config.properties");
+            File configFile = new File("config.properties");
             inputStream = new FileInputStream(configFile);
             Properties props = new Properties();
             props.load(inputStream);
@@ -24,7 +26,7 @@ public class Config {
             serverState.setElectionCoordinatorTimeout(Long.parseLong(props.getProperty("electionCoordinatorTimeout")));
             serverState.setElectionNominationTimeout(Long.parseLong(props.getProperty("electionNominationTimeout")));
             serverState.setConsensusVoteDuration(Long.parseLong(props.getProperty("consensusVoteDuration")));
-            File file = new File("src/main/resources/serverInfo.txt");
+            File file = new File("config/serverInfo.txt");
             sc = new Scanner(file);
             String line=null;
             int serverCount=0;

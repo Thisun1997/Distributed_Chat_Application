@@ -1,0 +1,59 @@
+version: "3.8"
+services:
+  chat-server-1:
+    image: chat-server
+    environment:
+      - localServerId=s1
+    ports:
+      - "4444:4444"
+      - "5555:5555"
+    volumes:
+      - type: bind
+        source: ./config
+        target: /config
+      - type: bind
+        source: ./Logs
+        target: /Logs
+  chat-server-2:
+    image: chat-server
+    environment:
+      - localServerId=s2
+    ports:
+      - "4445:4445"
+      - "5556:5556"
+    volumes:
+      - type: bind
+        source: ./config
+        target: /config
+      - type: bind
+        source: ./Logs
+        target: /Logs
+  chat-server-3:
+    image: chat-server
+    environment:
+      - localServerId=s3
+    ports:
+      - "4446:4446"
+      - "5557:5557"
+    volumes:
+      - type: bind
+        source: ./config
+        target: /config
+      - type: bind
+        source: ./Logs
+        target: /Logs
+  chat-server-4:
+    image: chat-server
+    environment:
+      - localServerId=s4
+    ports:
+      - "4447:4447"
+      - "5558:5558"
+    volumes:
+      - type: bind
+        source: ./config
+        target: /config
+      - type: bind
+        source: ./Logs
+        target: /Logs
+
