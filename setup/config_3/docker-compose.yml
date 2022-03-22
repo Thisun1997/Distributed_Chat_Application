@@ -1,0 +1,30 @@
+version: "3.8"
+services:
+  chat-server-5:
+    image: yasirurox/chat-server:v1
+    environment:
+      - localServerId=s5
+    ports:
+      - "4448:4448"
+      - "5559:5559"
+    volumes:
+      - type: bind
+        source: ./config
+        target: /config
+      - type: bind
+        source: ./Logs
+        target: /Logs
+  chat-server-6:
+    image: yasirurox/chat-server:v1
+    environment:
+      - localServerId=s6
+    ports:
+      - "4449:4449"
+      - "5560:5560"
+    volumes:
+      - type: bind
+        source: ./config
+        target: /config
+      - type: bind
+        source: ./Logs
+        target: /Logs

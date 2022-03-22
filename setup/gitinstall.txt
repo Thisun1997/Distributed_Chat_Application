@@ -1,0 +1,3 @@
+sudo apt-get update
+sudo apt-get install git
+sudo git clone https://github.com/Thisun1997/Distributed_Chat_Application.git
