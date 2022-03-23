@@ -1,5 +1,3 @@
 /.idea
 /Logs
 /target
-/src/main/resources/Logs/client.log
-/src/main/resources/Logs/coordination.log
