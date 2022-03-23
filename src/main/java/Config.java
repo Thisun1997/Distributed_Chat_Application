@@ -18,7 +18,7 @@ public class Config {
             ServerState serverState = ServerState.getInstance();
             String localServerId=System.getenv("localServerId").replace("s", "");
             serverState.setServerId(localServerId);
-            File configFile = new File("config.properties");
+            File configFile = new File("src/main/resources/config.properties");
             inputStream = new FileInputStream(configFile);
             Properties props = new Properties();
             props.load(inputStream);
@@ -26,7 +26,7 @@ public class Config {
             serverState.setElectionCoordinatorTimeout(Long.parseLong(props.getProperty("electionCoordinatorTimeout")));
             serverState.setElectionNominationTimeout(Long.parseLong(props.getProperty("electionNominationTimeout")));
             serverState.setConsensusVoteDuration(Long.parseLong(props.getProperty("consensusVoteDuration")));
-            File file = new File("config/serverInfo.txt");
+            File file = new File("src/main/resources/serverInfo.txt");
             sc = new Scanner(file);
             String line=null;
             int serverCount=0;
