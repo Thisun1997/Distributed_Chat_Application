@@ -19,7 +19,7 @@ public class Config {
 //            String localServerId=System.getenv("localServerId").replace("s", "");
             String localServerId = id.replace("s","");
             serverState.setServerId(localServerId);
-            File configFile = new File(configFilePath);
+            File configFile = new File("config.properties");
             inputStream = new FileInputStream(configFile);
             Properties props = new Properties();
             props.load(inputStream);
@@ -27,7 +27,8 @@ public class Config {
             serverState.setElectionCoordinatorTimeout(Long.parseLong(props.getProperty("electionCoordinatorTimeout")));
             serverState.setElectionNominationTimeout(Long.parseLong(props.getProperty("electionNominationTimeout")));
             serverState.setConsensusVoteDuration(Long.parseLong(props.getProperty("consensusVoteDuration")));
-            File file = new File("src/main/resources/serverInfo.txt");
+            // path to the serverInfo.txt
+            File file = new File(configFilePath);
             sc = new Scanner(file);
             String line=null;
             int serverCount=0;
